@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">Open Travel CRM</title>
+  <desc id="desc">Open-source travel agency CRM built with Google Sheets and Apps Script</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#092846"/>
+      <stop offset="1" stop-color="#1f6096"/>
+    </linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="18" stdDeviation="24" flood-opacity=".2"/></filter>
+  </defs>
+  <rect width="1200" height="420" rx="28" fill="url(#bg)"/>
+  <circle cx="1050" cy="58" r="190" fill="#ffffff" opacity=".045"/>
+  <circle cx="1130" cy="370" r="250" fill="#ef8b22" opacity=".08"/>
+  <g transform="translate(70 70)">
+    <rect width="64" height="64" rx="18" fill="#ef8b22"/>
+    <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-size="24" font-weight="800" fill="#fff">OT</text>
+    <text x="0" y="132" font-family="Arial,sans-serif" font-size="52" font-weight="800" fill="#fff">Open Travel CRM</text>
+    <text x="0" y="178" font-family="Arial,sans-serif" font-size="24" fill="#c7dcf0">Google Sheets + Apps Script · secure by design</text>
+    <g transform="translate(0 230)" font-family="Arial,sans-serif" font-size="16" font-weight="700">
+      <rect width="180" height="46" rx="23" fill="#fff"/>
+      <text x="90" y="29" text-anchor="middle" fill="#12385f">Leads &amp; bookings</text>
+      <rect x="194" width="190" height="46" rx="23" fill="#fff" opacity=".13"/>
+      <text x="289" y="29" text-anchor="middle" fill="#fff">Installment payments</text>
+      <rect x="398" width="150" height="46" rx="23" fill="#fff" opacity=".13"/>
+      <text x="473" y="29" text-anchor="middle" fill="#fff">Audit trail</text>
+    </g>
+  </g>
+  <g transform="translate(760 76)" filter="url(#shadow)">
+    <rect width="360" height="270" rx="22" fill="#fff"/>
+    <rect x="24" y="24" width="125" height="14" rx="7" fill="#153b66"/>
+    <rect x="24" y="56" width="312" height="58" rx="14" fill="#f1f5fa"/>
+    <rect x="42" y="74" width="86" height="10" rx="5" fill="#8094aa"/>
+    <rect x="42" y="91" width="142" height="9" rx="5" fill="#c3cfdb"/>
+    <g transform="translate(24 136)">
+      <rect width="96" height="92" rx="14" fill="#eff5ff"/>
+      <rect x="108" width="96" height="92" rx="14" fill="#f7f8fa"/>
+      <rect x="216" width="120" height="92" rx="14" fill="#fff5e9"/>
+      <text x="14" y="28" font-family="Arial" font-size="10" fill="#63748a">LEADS</text>
+      <text x="14" y="64" font-family="Arial" font-size="25" font-weight="700" fill="#12385f">24</text>
+      <text x="122" y="28" font-family="Arial" font-size="10" fill="#63748a">PAID</text>
+      <text x="122" y="64" font-family="Arial" font-size="23" font-weight="700" fill="#15805d">€8.4k</text>
+      <text x="230" y="28" font-family="Arial" font-size="10" fill="#63748a">BALANCE</text>
+      <text x="230" y="64" font-family="Arial" font-size="23" font-weight="700" fill="#ef8b22">€2.1k</text>
+    </g>
+  </g>
+</svg>

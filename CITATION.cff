@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use Open Travel CRM in research, training or a case study, please cite it."
+title: "Open Travel CRM for Google Sheets"
+type: software
+authors:
+  - family-names: "Karahrodi"
+    given-names: "Soroush"
+repository-code: "https://github.com/soroushkarahrodi79-oss/travel-agency-crm-google-sheets"
+url: "https://soroushkarahrodi79-oss.github.io/travel-agency-crm-google-sheets/"
+license: MIT
+version: 1.0.0
+date-released: 2026-07-24
+keywords:
+  - CRM
+  - travel agency
+  - Google Sheets
+  - Google Apps Script
+  - installment payments

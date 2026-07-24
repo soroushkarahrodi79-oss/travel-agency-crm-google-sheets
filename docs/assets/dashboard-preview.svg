@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">Open Travel CRM dashboard preview</title>
+  <desc id="desc">A responsive dashboard with lead metrics and recent customer records</desc>
+  <rect width="1280" height="720" rx="24" fill="#f4f7fb"/>
+  <rect width="238" height="720" fill="#0b2846"/>
+  <rect x="22" y="26" width="42" height="42" rx="12" fill="#ef8b22"/>
+  <text x="43" y="53" text-anchor="middle" font-family="Arial" font-size="15" font-weight="800" fill="#fff">OT</text>
+  <text x="78" y="45" font-family="Arial" font-size="16" font-weight="700" fill="#fff">Open Travel CRM</text>
+  <text x="78" y="62" font-family="Arial" font-size="10" fill="#a9bfd2">Google Sheets edition</text>
+  <rect x="18" y="112" width="202" height="42" rx="11" fill="#ffffff" opacity=".12"/>
+  <text x="38" y="138" font-family="Arial" font-size="13" font-weight="700" fill="#fff">Dashboard</text>
+  <text x="38" y="186" font-family="Arial" font-size="13" font-weight="700" fill="#c8d8e8">Leads</text>
+  <text x="38" y="234" font-family="Arial" font-size="13" font-weight="700" fill="#c8d8e8">New lead</text>
+  <text x="274" y="58" font-family="Arial" font-size="32" font-weight="800" fill="#132238">Sales overview</text>
+  <text x="274" y="83" font-family="Arial" font-size="13" fill="#63748a">Leads, bookings and installment payments in one workspace.</text>
+  <g transform="translate(274 120)" font-family="Arial">
+    <g><rect width="220" height="118" rx="17" fill="#fff" stroke="#d9e3ee"/><text x="20" y="32" font-size="12" fill="#63748a">ACCESSIBLE LEADS</text><text x="20" y="82" font-size="34" font-weight="800" fill="#12385f">24</text></g>
+    <g transform="translate(236)"><rect width="220" height="118" rx="17" fill="#fff" stroke="#d9e3ee"/><text x="20" y="32" font-size="12" fill="#63748a">PIPELINE</text><text x="20" y="82" font-size="30" font-weight="800" fill="#12385f">€18,450</text></g>
+    <g transform="translate(472)"><rect width="220" height="118" rx="17" fill="#fff" stroke="#d9e3ee"/><text x="20" y="32" font-size="12" fill="#63748a">CONFIRMED SALES</text><text x="20" y="82" font-size="30" font-weight="800" fill="#15805d">€8,400</text></g>
+    <g transform="translate(708)"><rect width="220" height="118" rx="17" fill="#fff" stroke="#d9e3ee"/><text x="20" y="32" font-size="12" fill="#63748a">PENDING PAYMENT</text><text x="20" y="82" font-size="34" font-weight="800" fill="#ef8b22">5</text></g>
+  </g>
+  <g transform="translate(274 266)" font-family="Arial">
+    <rect width="928" height="392" rx="18" fill="#fff" stroke="#d9e3ee"/>
+    <text x="24" y="42" font-size="20" font-weight="800" fill="#132238">Recent leads</text>
+    <text x="24" y="64" font-size="12" fill="#63748a">Your latest commercial activity.</text>
+    <g transform="translate(24 94)">
+      <rect width="880" height="72" rx="13" fill="#f9fbfd" stroke="#d9e3ee"/>
+      <text x="18" y="29" font-size="14" font-weight="700" fill="#132238">Amelia Rivera</text><text x="18" y="49" font-size="11" fill="#63748a">TRV-2026-0001 · Fictional demo</text>
+      <text x="360" y="29" font-size="10" fill="#63748a">DESTINATION</text><text x="360" y="49" font-size="13" font-weight="700" fill="#132238">Ecuador</text>
+      <rect x="690" y="21" width="105" height="28" rx="14" fill="#eaf1ff"/><text x="742" y="39" text-anchor="middle" font-size="10" font-weight="700" fill="#174ea6">NEGOTIATION</text>
+    </g>
+    <g transform="translate(24 178)">
+      <rect width="880" height="72" rx="13" fill="#f9fbfd" stroke="#d9e3ee"/>
+      <text x="18" y="29" font-size="14" font-weight="700" fill="#132238">Noah Martin</text><text x="18" y="49" font-size="11" fill="#63748a">TRV-2026-0002 · Fictional demo</text>
+      <text x="360" y="29" font-size="10" fill="#63748a">DESTINATION</text><text x="360" y="49" font-size="13" font-weight="700" fill="#132238">Japan</text>
+      <rect x="635" y="21" width="160" height="28" rx="14" fill="#fff5e9"/><text x="715" y="39" text-anchor="middle" font-size="10" font-weight="700" fill="#b5610a">PENDING PAYMENT</text>
+    </g>
+    <g transform="translate(24 262)">
+      <rect width="880" height="72" rx="13" fill="#f9fbfd" stroke="#d9e3ee"/>
+      <text x="18" y="29" font-size="14" font-weight="700" fill="#132238">Olivia Chen</text><text x="18" y="49" font-size="11" fill="#63748a">TRV-2026-0003 · Fictional demo</text>
+      <text x="360" y="29" font-size="10" fill="#63748a">DESTINATION</text><text x="360" y="49" font-size="13" font-weight="700" fill="#132238">Portugal</text>
+      <rect x="690" y="21" width="105" height="28" rx="14" fill="#eaf7f2"/><text x="742" y="39" text-anchor="middle" font-size="10" font-weight="700" fill="#15805d">CLOSED WON</text>
+    </g>
+  </g>
+</svg>

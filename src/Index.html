@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="color-scheme" content="light">
+  <style>
+    :root{
+      --navy:#12385f;--navy-2:#0b2846;--blue:#2667e8;--orange:#ef8b22;
+      --ink:#132238;--muted:#63748a;--line:#d9e3ee;--surface:#fff;
+      --canvas:#f4f7fb;--green:#15805d;--red:#b42318;--shadow:0 18px 50px rgba(15,40,70,.10);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--canvas);color:var(--ink)}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .shell{min-height:100vh;display:grid;grid-template-columns:250px minmax(0,1fr)}
+    aside{background:linear-gradient(180deg,var(--navy-2),var(--navy));color:#fff;padding:26px 18px;position:sticky;top:0;height:100vh}
+    .brand{display:flex;align-items:center;gap:12px;margin:0 8px 32px}
+    .brand-mark{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:var(--orange);font-weight:900}
+    .brand strong,.brand small{display:block}.brand small{opacity:.7;margin-top:2px}
+    nav{display:grid;gap:8px}
+    nav button{border:0;background:transparent;color:#d9e8f6;text-align:left;padding:12px 14px;border-radius:12px;font-weight:700}
+    nav button:hover,nav button.active{background:rgba(255,255,255,.12);color:#fff}
+    .aside-note{position:absolute;left:18px;right:18px;bottom:24px;padding:14px;border:1px solid rgba(255,255,255,.15);border-radius:14px;font-size:12px;color:#c8d8e8}
+    main{min-width:0;padding:28px}
+    .topbar{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:24px}
+    .topbar h1{margin:0;font-size:clamp(24px,3vw,38px);letter-spacing:-.04em}
+    .topbar p{margin:6px 0 0;color:var(--muted)}
+    .user-chip{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 14px;box-shadow:0 8px 24px rgba(15,40,70,.06)}
+    .user-chip strong,.user-chip small{display:block}.user-chip small{color:var(--muted);margin-top:2px}
+    .view{display:none}.view.active{display:block}
+    .grid-kpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:22px}
+    .card{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+    .kpi{padding:20px}.kpi span{display:block;color:var(--muted);font-size:13px}.kpi strong{display:block;margin-top:8px;font-size:28px;color:var(--navy)}
+    .section{padding:22px;margin-bottom:20px}
+    .section-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:18px}
+    .section-head h2,.section-head h3{margin:0}.section-head p{margin:4px 0 0;color:var(--muted);font-size:13px}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap}
+    .input,.select,.textarea{width:100%;min-height:46px;border:1px solid #cbd8e6;border-radius:12px;background:#fff;padding:11px 13px;color:var(--ink);outline:none}
+    .input:focus,.select:focus,.textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(38,103,232,.13)}
+    .textarea{min-height:110px;resize:vertical}
+    label{display:block;margin:0 0 6px;font-size:13px;font-weight:800;color:#29435f}
+    .field{min-width:0}.field.full{grid-column:1/-1}
+    .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+    .btn{border:0;border-radius:11px;min-height:44px;padding:10px 16px;font-weight:800}
+    .btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:#1554cf}
+    .btn-secondary{background:#fff;color:var(--navy);border:1px solid var(--line)}
+    .btn-danger{background:#fff;color:var(--red);border:1px solid #f0c6c1}
+    .search{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}
+    .list{display:grid;gap:10px}
+    .lead-row{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(3,minmax(110px,.7fr)) auto;gap:14px;align-items:center;padding:15px;border:1px solid var(--line);border-radius:14px;background:#fff}
+    .lead-row strong,.lead-row small{display:block}.lead-row small{color:var(--muted);margin-top:3px}
+    .badge{display:inline-flex;align-items:center;width:max-content;padding:6px 9px;border-radius:999px;background:#eaf1ff;color:#174ea6;font-size:11px;font-weight:900}
+    .empty{padding:40px 20px;text-align:center;color:var(--muted);border:1px dashed #bdcad8;border-radius:14px}
+    .profile-hero{padding:20px;border-radius:16px;background:linear-gradient(115deg,var(--navy-2),#255d91);color:#fff;margin-bottom:18px}
+    .profile-hero small{color:#c9dcef}.profile-hero h2{margin:5px 0 0;font-size:28px}
+    .summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
+    .summary div{padding:15px;border-radius:13px;background:#f6f9fd;border:1px solid var(--line)}
+    .summary span,.summary strong{display:block}.summary span{font-size:12px;color:var(--muted)}.summary strong{margin-top:5px;font-size:20px;color:var(--navy)}
+    .payment-row{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:13px;border:1px solid var(--line);border-radius:13px}
+    .payment-row.cancelled{opacity:.6;background:#f2f4f7}.payment-row small{color:var(--muted)}
+    .message{position:fixed;right:22px;bottom:22px;max-width:420px;padding:14px 16px;border-radius:12px;color:#fff;background:var(--navy);box-shadow:var(--shadow);z-index:10}
+    .message.error{background:var(--red)}.message[hidden]{display:none}
+    .loading{opacity:.58;pointer-events:none}
+    .auth-screen{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 20% 15%,#dfeeff 0,transparent 35%),linear-gradient(135deg,#f8fbff,#edf3fa)}
+    .auth-card{width:min(460px,100%);padding:30px}.auth-logo{width:54px;height:54px;display:grid;place-items:center;border-radius:16px;background:var(--orange);color:#fff;font-weight:900;margin-bottom:22px}
+    .auth-card h1{margin:0;font-size:30px;letter-spacing:-.04em}.auth-card p{color:var(--muted);line-height:1.55}.auth-form{display:grid;gap:14px;margin-top:22px}
+    .auth-form .btn{width:100%}.auth-hint{font-size:12px;color:var(--muted)}
+    .user-actions{display:flex;align-items:center;gap:10px}.user-actions .btn{min-height:40px;padding:8px 12px}
+    [hidden]{display:none!important}
+    @media(max-width:1000px){.grid-kpi{grid-template-columns:repeat(2,1fr)}.lead-row{grid-template-columns:1fr 1fr}.lead-row .lead-main{grid-column:1/-1}}
+    @media(max-width:720px){.shell{grid-template-columns:1fr}aside{position:static;height:auto;padding:14px}nav{grid-template-columns:repeat(3,1fr)}.aside-note{display:none}.brand{margin:0 0 12px}main{padding:18px}.topbar{align-items:flex-start}.user-chip{display:none}.grid-kpi,.form-grid,.summary{grid-template-columns:1fr}.lead-row{grid-template-columns:1fr}.search{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <section id="authScreen" class="auth-screen">
+    <article class="card auth-card">
+      <div class="auth-logo">OT</div>
+      <h1>Open Travel CRM</h1>
+      <p id="authIntro">Enter the email registered by your CRM administrator. We will send a one-time access code.</p>
+      <form id="emailForm" class="auth-form">
+        <div><label for="loginEmail">Work email</label><input id="loginEmail" class="input" type="email" autocomplete="email" required placeholder="agent&#64;example.com"></div>
+        <button id="emailSubmit" class="btn btn-primary" type="submit">Send access code</button>
+      </form>
+      <form id="codeForm" class="auth-form" hidden>
+        <div><label for="loginCode">6-digit code</label><input id="loginCode" class="input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required placeholder="000000"></div>
+        <button id="codeSubmit" class="btn btn-primary" type="submit">Sign in securely</button>
+        <button id="changeEmail" class="btn btn-secondary" type="button">Use another email</button>
+      </form>
+      <p class="auth-hint">Codes expire after 10 minutes. Access is limited to active users in the USERS sheet.</p>
+    </article>
+  </section>
+  <div id="crmShell" class="shell" hidden>
+    <aside>
+      <div class="brand"><div class="brand-mark">OT</div><div><strong>Open Travel CRM</strong><small>Google Sheets edition</small></div></div>
+      <nav aria-label="Main navigation">
+        <button class="active" data-view="dashboard">Dashboard</button>
+        <button data-view="leads">Leads</button>
+        <button data-action="new">New lead</button>
+      </nav>
+      <div class="aside-note">Open-source sample · No customer data is bundled.</div>
+    </aside>
+    <main id="app" class="loading">
+      <header class="topbar">
+        <div><h1 id="pageTitle">Sales overview</h1><p>Leads, bookings and installment payments in one workspace.</p></div>
+        <div class="user-actions"><div class="user-chip"><strong id="userName">Loading…</strong><small id="userRole"></small></div><button id="signOutButton" class="btn btn-secondary" type="button">Sign out</button></div>
+      </header>
+
+      <section id="dashboard" class="view active">
+        <div class="grid-kpi">
+          <article class="card kpi"><span>Accessible leads</span><strong id="kpiLeads">—</strong></article>
+          <article class="card kpi"><span>Pipeline</span><strong id="kpiPipeline">—</strong></article>
+          <article class="card kpi"><span>Confirmed sales</span><strong id="kpiSales">—</strong></article>
+          <article class="card kpi"><span>Pending payment</span><strong id="kpiPending">—</strong></article>
+        </div>
+        <article class="card section"><div class="section-head"><div><h2>Recent leads</h2><p>Your latest commercial activity.</p></div><button class="btn btn-secondary" data-view="leads">View all</button></div><div id="recentList" class="list"></div></article>
+      </section>
+
+      <section id="leads" class="view">
+        <article class="card section">
+          <div class="section-head"><div><h2>Lead directory</h2><p>Search by name, phone, destination, status or ID.</p></div><button class="btn btn-primary" data-action="new">New lead</button></div>
+          <div class="search"><input id="searchInput" class="input" placeholder="Search leads…" aria-label="Search leads"><button id="searchButton" class="btn btn-secondary">Search</button></div>
+          <div id="leadList" class="list" style="margin-top:16px"></div>
+        </article>
+      </section>
+
+      <section id="editor" class="view">
+        <div id="editorContent"></div>
+      </section>
+    </main>
+  </div>
+  <div id="message" class="message" hidden></div>
+
+  <script>
+    var state={bootstrap:null,current:null,dirty:false,token:sessionStorage.getItem('otc_token')||'',email:''};
+    document.addEventListener('DOMContentLoaded',start);
+    document.addEventListener('click',function(event){
+      var viewButton=event.target.closest('[data-view]');
+      if(viewButton){showView(viewButton.dataset.view);return;}
+      var action=event.target.closest('[data-action]');
+      if(!action)return;
+      if(action.dataset.action==='new')renderEditor(null);
+      if(action.dataset.action==='open')openLead(action.dataset.id);
+      if(action.dataset.action==='edit-payment')editPayment(action.dataset.id);
+      if(action.dataset.action==='cancel-payment')cancelPaymentUi(action.dataset.id);
+    });
+
+    async function start(){
+      document.getElementById('emailForm').addEventListener('submit',requestCodeUi);
+      document.getElementById('codeForm').addEventListener('submit',verifyCodeUi);
+      document.getElementById('changeEmail').addEventListener('click',resetLogin);
+      document.getElementById('signOutButton').addEventListener('click',signOutUi);
+      document.getElementById('searchButton').addEventListener('click',search);
+      document.getElementById('searchInput').addEventListener('keydown',function(e){if(e.key==='Enter')search();});
+      if(!state.token){showLogin();return;}
+      await startApp();
+    }
+
+    async function startApp(){
+      try{
+        state.bootstrap=await api('getBootstrap');
+        document.getElementById('userName').textContent=state.bootstrap.user.displayName;
+        document.getElementById('userRole').textContent=state.bootstrap.user.role+' · v'+state.bootstrap.version;
+        await Promise.all([loadDashboard(),search()]);
+        document.getElementById('app').classList.remove('loading');
+        document.getElementById('authScreen').hidden=true;
+        document.getElementById('crmShell').hidden=false;
+      }catch(error){
+        clearSession();
+        showLogin();
+        showMessage(errorText(error),true);
+      }
+    }
+
+    async function requestCodeUi(event){
+      event.preventDefault();
+      var button=document.getElementById('emailSubmit');button.disabled=true;
+      try{
+        state.email=value('loginEmail').trim().toLowerCase();
+        var result=await publicApi('requestAccessCode',state.email);
+        document.getElementById('authIntro').textContent=result.message;
+        document.getElementById('emailForm').hidden=true;
+        document.getElementById('codeForm').hidden=false;
+        document.getElementById('loginCode').focus();
+      }catch(error){showMessage(errorText(error),true);}
+      finally{button.disabled=false;}
+    }
+
+    async function verifyCodeUi(event){
+      event.preventDefault();
+      var button=document.getElementById('codeSubmit');button.disabled=true;
+      try{
+        var result=await publicApi('verifyAccessCode',state.email,value('loginCode'));
+        state.token=result.token;
+        sessionStorage.setItem('otc_token',state.token);
+        await startApp();
+      }catch(error){showMessage(errorText(error),true);}
+      finally{button.disabled=false;}
+    }
+
+    async function signOutUi(){
+      var token=state.token;
+      clearSession();
+      try{if(token)await publicApi('signOut',token);}catch(error){}
+      showLogin();
+    }
+
+    function clearSession(){
+      state.token='';state.bootstrap=null;state.current=null;state.dirty=false;
+      sessionStorage.removeItem('otc_token');
+    }
+
+    function showLogin(){
+      document.getElementById('crmShell').hidden=true;
+      document.getElementById('authScreen').hidden=false;
+      document.getElementById('app').classList.add('loading');
+    }
+
+    function resetLogin(){
+      state.email='';setValue('loginCode','');
+      document.getElementById('authIntro').textContent='Enter the email registered by your CRM administrator. We will send a one-time access code.';
+      document.getElementById('emailForm').hidden=false;
+      document.getElementById('codeForm').hidden=true;
+      document.getElementById('loginEmail').focus();
+    }
+
+    async function loadDashboard(){
+      var data=await api('getDashboard');
+      setText('kpiLeads',data.total);
+      setText('kpiPipeline',euros(data.pipeline));
+      setText('kpiSales',euros(data.sales));
+      setText('kpiPending',data.byStatus.BOOKED_PENDING_PAYMENT||0);
+      document.getElementById('recentList').innerHTML=renderLeadRows(data.recent);
+    }
+
+    async function search(){
+      try{
+        var query=document.getElementById('searchInput').value||'';
+        var leads=await api('searchLeads',query,50);
+        document.getElementById('leadList').innerHTML=renderLeadRows(leads);
+      }catch(error){showMessage(errorText(error),true);}
+    }
+
+    function renderLeadRows(leads){
+      if(!leads||!leads.length)return '<div class="empty">No leads found.</div>';
+      return leads.map(function(lead){
+        return '<article class="lead-row"><div class="lead-main"><strong>'+esc(lead.name)+'</strong><small>'+esc(lead.id)+' · '+esc(lead.phone)+'</small></div>'+
+          '<div><small>Destination</small><strong>'+esc(lead.destination||'—')+'</strong></div>'+
+          '<div><small>Budget</small><strong>'+euros(lead.budget)+'</strong></div>'+
+          '<div><span class="badge">'+esc(label(lead.status))+'</span></div>'+
+          '<button class="btn btn-secondary" data-action="open" data-id="'+esc(lead.id)+'">Open</button></article>';
+      }).join('');
+    }
+
+    async function openLead(id){
+      try{renderLoadingEditor();var lead=await api('getLead',id);renderEditor(lead);}
+      catch(error){showMessage(errorText(error),true);}
+    }
+
+    function renderLoadingEditor(){showView('editor');document.getElementById('editorContent').innerHTML='<div class="card section">Loading lead…</div>';}
+
+    function renderEditor(lead){
+      state.current=lead||null;state.dirty=false;showView('editor');
+      var reservation=lead&&lead.reservation||{};
+      var ownerField=state.bootstrap.user.role==='ADMIN'
+        ? field('Agent','<select id="agentEmail" class="select">'+agentOptions(lead&&lead.agentEmail)+'</select>')
+        : '';
+      var hero=lead?'<div class="profile-hero"><small>'+esc(lead.id)+'</small><h2>'+esc(lead.name)+'</h2></div>':'';
+      var payments=lead?renderPayments(lead):'';
+      document.getElementById('editorContent').innerHTML=hero+
+        '<article class="card section"><div class="section-head"><div><h2>'+(lead?'Edit lead':'Create lead')+'</h2><p>Customer, trip and commercial details.</p></div></div>'+
+        '<form id="leadForm"><div class="form-grid">'+
+        hidden('leadId',lead&&lead.id)+
+        field('Name',input('name',lead&&lead.name,'Customer name',true))+
+        field('Phone / WhatsApp',input('phone',lead&&lead.phone,'International phone',true))+
+        ownerField+
+        field('Source',select('source',state.bootstrap.options.SOURCES,lead&&lead.source||'OTHER'))+
+        field('Status',select('status',state.bootstrap.options.STATUSES,lead&&lead.status||'NEW'))+
+        field('Service',select('service',state.bootstrap.options.SERVICES,lead&&lead.service||'FLIGHT'))+
+        field('Destination',input('destination',lead&&lead.destination,'E.g. Ecuador'))+
+        field('Provider',input('provider',reservation.provider,'E.g. Global Air Services'))+
+        field('Booking locator',input('locator',reservation.locator,'E.g. ABC123'))+
+        field('Route',input('route',reservation.route,'E.g. MADRID - QUITO'))+
+        field('Budget',input('budget',lead&&lead.budget,'0.00','', 'decimal'))+
+        field('Sale amount',input('saleAmount',lead&&lead.saleAmount,'0.00','', 'decimal'))+
+        field('Travel start',dateInput('travelStart',lead&&lead.travelStart))+
+        field('Travel end',dateInput('travelEnd',lead&&lead.travelEnd))+
+        field('Passengers',input('passengers',lead&&lead.passengers,'1','', 'numeric'))+
+        field('Next follow-up',dateInput('nextFollowUp',lead&&lead.nextFollowUp))+
+        field('Next action',input('nextAction',lead&&lead.nextAction,'E.g. Send quote'))+
+        field('Notes','<textarea id="notes" class="textarea">'+esc(lead&&lead.notes||'')+'</textarea>','full')+
+        '</div><div class="toolbar" style="margin-top:18px"><button class="btn btn-primary" type="submit">Save lead</button><button class="btn btn-secondary" type="button" data-view="leads">Back</button></div></form></article>'+payments;
+      document.getElementById('leadForm').addEventListener('submit',saveLeadUi);
+      document.getElementById('leadForm').addEventListener('input',function(){state.dirty=true;});
+      var paymentForm=document.getElementById('paymentForm');
+      if(paymentForm)paymentForm.addEventListener('submit',savePaymentUi);
+    }
+
+    async function saveLeadUi(event){
+      event.preventDefault();
+      try{
+        var payload=values(['leadId','name','phone','agentEmail','source','status','service','destination','provider','locator','route','budget','saleAmount','travelStart','travelEnd','passengers','nextFollowUp','nextAction','notes']);
+        payload.id=payload.leadId;payload.agentEmail=payload.agentEmail||'';
+        var result=await api('saveLead',payload);
+        state.dirty=false;renderEditor(result.lead);showMessage('Lead saved.',false);
+        await Promise.all([loadDashboard(),search()]);
+      }catch(error){showMessage(errorText(error),true);}
+    }
+
+    function renderPayments(lead){
+      var summary=lead.paymentSummary||{};
+      var rows=(lead.payments||[]).map(function(payment){
+        var cancelled=payment.status==='CANCELLED';
+        return '<div class="payment-row '+(cancelled?'cancelled':'')+'"><div><strong>'+esc(payment.paymentDate)+' · '+euros(payment.amount)+'</strong><small>'+esc(label(payment.method))+(payment.reference?' · '+esc(payment.reference):'')+(cancelled?' · Cancelled: '+esc(payment.cancellationReason):'')+'</small></div>'+
+          (!cancelled?'<div class="toolbar"><button class="btn btn-secondary" data-action="edit-payment" data-id="'+esc(payment.id)+'">Edit</button><button class="btn btn-danger" data-action="cancel-payment" data-id="'+esc(payment.id)+'">Cancel</button></div>':'')+'</div>';
+      }).join('')||'<div class="empty">No payments recorded yet.</div>';
+      return '<article class="card section"><div class="section-head"><div><h2>Installment payments</h2><p>Movements are auditable; cancellations are never deleted.</p></div></div>'+
+        '<div class="summary"><div><span>Sale total</span><strong>'+euros(summary.total)+'</strong></div><div><span>Paid</span><strong>'+euros(summary.paid)+'</strong></div><div><span>Balance</span><strong>'+euros(summary.balance)+'</strong></div></div>'+
+        '<form id="paymentForm"><input type="hidden" id="paymentId"><div class="form-grid">'+
+        field('Payment date',dateInput('paymentDate',state.bootstrap.today))+
+        field('Amount',input('paymentAmount','','0.00','', 'decimal'))+
+        field('Method',select('paymentMethod',state.bootstrap.options.PAYMENT_METHODS,'BANK_TRANSFER'))+
+        field('Reference',input('paymentReference','','Operation or receipt number'))+
+        field('Notes',input('paymentNotes','','Optional note'),'full')+
+        '</div><div class="toolbar" style="margin:16px 0"><button id="paymentSubmit" class="btn btn-primary" type="submit">Add payment</button><button id="paymentReset" class="btn btn-secondary" type="button" onclick="resetPayment()">Clear</button></div></form><div class="list">'+rows+'</div></article>';
+    }
+
+    async function savePaymentUi(event){
+      event.preventDefault();
+      if(state.dirty){showMessage('Save lead changes before managing payments.',true);return;}
+      try{
+        var payload={leadId:state.current.id,paymentId:value('paymentId'),paymentDate:value('paymentDate'),amount:value('paymentAmount'),method:value('paymentMethod'),reference:value('paymentReference'),notes:value('paymentNotes')};
+        var result=await api('savePayment',payload);renderEditor(result.lead);showMessage('Payment saved.',false);await loadDashboard();
+      }catch(error){showMessage(errorText(error),true);}
+    }
+
+    function editPayment(id){
+      if(state.dirty){showMessage('Save lead changes before editing payments.',true);return;}
+      var payment=(state.current.payments||[]).find(function(item){return item.id===id;});
+      if(!payment)return;
+      setValue('paymentId',payment.id);setValue('paymentDate',payment.paymentDate);setValue('paymentAmount',payment.amount);
+      setValue('paymentMethod',payment.method);setValue('paymentReference',payment.reference);setValue('paymentNotes',payment.notes);
+      document.getElementById('paymentSubmit').textContent='Update payment';
+    }
+
+    async function cancelPaymentUi(id){
+      if(state.dirty){showMessage('Save lead changes before cancelling payments.',true);return;}
+      var reason=window.prompt('Cancellation reason:');if(!reason)return;
+      try{var result=await api('cancelPayment',{leadId:state.current.id,paymentId:id,reason:reason});renderEditor(result.lead);showMessage('Payment cancelled and retained in the audit trail.',false);await loadDashboard();}
+      catch(error){showMessage(errorText(error),true);}
+    }
+
+    function resetPayment(){['paymentId','paymentAmount','paymentReference','paymentNotes'].forEach(function(id){setValue(id,'');});setValue('paymentDate',state.bootstrap.today);setValue('paymentMethod','BANK_TRANSFER');document.getElementById('paymentSubmit').textContent='Add payment';}
+    function showView(id){document.querySelectorAll('.view').forEach(function(view){view.classList.toggle('active',view.id===id);});document.querySelectorAll('nav [data-view]').forEach(function(button){button.classList.toggle('active',button.dataset.view===id);});var titles={dashboard:'Sales overview',leads:'Lead directory',editor:'Customer file'};document.getElementById('pageTitle').textContent=titles[id]||'Open Travel CRM';}
+    function field(name,control,extra){return '<div class="field '+(extra||'')+'"><label>'+esc(name)+'</label>'+control+'</div>';}
+    function input(id,val,placeholder,required,mode){return '<input id="'+id+'" class="input" value="'+esc(val===undefined||val===null?'':val)+'" placeholder="'+esc(placeholder||'')+'" '+(required?'required ':'')+(mode?'inputmode="'+mode+'"':'')+'>';}
+    function dateInput(id,val){return '<input id="'+id+'" class="input" type="date" value="'+esc(val||'')+'">';}
+    function hidden(id,val){return '<input id="'+id+'" type="hidden" value="'+esc(val||'')+'">';}
+    function select(id,options,current){return '<select id="'+id+'" class="select">'+(options||[]).map(function(option){return '<option value="'+esc(option)+'" '+(option===current?'selected':'')+'>'+esc(label(option))+'</option>';}).join('')+'</select>';}
+    function agentOptions(current){var options=state.bootstrap.agents||[];return options.map(function(agent){return '<option value="'+esc(agent.email)+'" '+(agent.email===current?'selected':'')+'>'+esc(agent.name)+' · '+esc(agent.email)+'</option>';}).join('');}
+    function values(ids){var out={};ids.forEach(function(id){out[id]=value(id);});return out;}
+    function value(id){var element=document.getElementById(id);return element?element.value:'';}
+    function setValue(id,val){var element=document.getElementById(id);if(element)element.value=val===undefined||val===null?'':val;}
+    function setText(id,text){document.getElementById(id).textContent=text;}
+    function label(value){return String(value||'').toLowerCase().replace(/_/g,' ').replace(/\b\w/g,function(char){return char.toUpperCase();});}
+    function euros(value){var number=Number(value);return Number.isFinite(number)?number.toLocaleString('en-GB',{style:'currency',currency:'EUR'}):'—';}
+    function esc(value){return String(value===null||value===undefined?'':value).replace(/[&<>"']/g,function(char){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];});}
+    function errorText(error){return error&&error.message?error.message:String(error||'Unexpected error');}
+    function showMessage(text,isError){var message=document.getElementById('message');message.textContent=text;message.className='message'+(isError?' error':'');message.hidden=false;window.setTimeout(function(){message.hidden=true;},5000);}
+    function api(method){var args=[state.token].concat([].slice.call(arguments,1));return runServer(method,args);}
+    function publicApi(method){return runServer(method,[].slice.call(arguments,1));}
+    function runServer(method,args){return new Promise(function(resolve,reject){var runner=google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);runner[method].apply(runner,args);});}
+  </script>
+</body>
+</html>
