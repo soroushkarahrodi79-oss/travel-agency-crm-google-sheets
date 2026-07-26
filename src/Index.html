@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="<?= language ?>">
 <head>
   <meta charset="utf-8">
   <meta name="color-scheme" content="light">
@@ -87,71 +87,71 @@
     @media(max-width:720px){.shell{grid-template-columns:1fr}aside{position:static;height:auto;padding:14px}nav{grid-template-columns:repeat(2,1fr)}.aside-note{display:none}.brand{margin:0 0 12px}main{padding:18px}.topbar{align-items:flex-start}.user-chip{display:none}.grid-kpi,.form-grid,.summary{grid-template-columns:1fr}.lead-row,.user-row{grid-template-columns:1fr}.search{grid-template-columns:1fr}}
   </style>
 </head>
-<body>
-  <a class="skip-link" href="#app">Skip to main content</a>
+<body data-message-catalogue="<?= messages ?>">
+  <a class="skip-link" href="#app" data-i18n>Skip to main content</a>
   <section id="authScreen" class="auth-screen">
     <article class="card auth-card">
       <div class="auth-logo">OT</div>
       <h1 id="authBrand"><?= appName ?></h1>
-      <p id="authIntro">Enter the email registered by your CRM administrator. We will send a one-time access code.</p>
+      <p id="authIntro" data-i18n>Enter the email registered by your CRM administrator. We will send a one-time access code.</p>
       <form id="emailForm" class="auth-form">
-        <div><label for="loginEmail">Work email</label><input id="loginEmail" class="input" type="email" autocomplete="email" required placeholder="agent&#64;example.com"></div>
-        <button id="emailSubmit" class="btn btn-primary" type="submit">Send access code</button>
+        <div><label for="loginEmail" data-i18n>Work email</label><input id="loginEmail" class="input" type="email" autocomplete="email" required placeholder="agent&#64;example.com"></div>
+        <button id="emailSubmit" class="btn btn-primary" type="submit" data-i18n>Send access code</button>
       </form>
       <form id="codeForm" class="auth-form" hidden>
-        <div><label for="loginCode">6-digit code</label><input id="loginCode" class="input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required placeholder="000000"></div>
-        <button id="codeSubmit" class="btn btn-primary" type="submit">Sign in securely</button>
-        <button id="changeEmail" class="btn btn-secondary" type="button">Use another email</button>
+        <div><label for="loginCode" data-i18n>6-digit code</label><input id="loginCode" class="input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required placeholder="000000"></div>
+        <button id="codeSubmit" class="btn btn-primary" type="submit" data-i18n>Sign in securely</button>
+        <button id="changeEmail" class="btn btn-secondary" type="button" data-i18n>Use another email</button>
       </form>
-      <p class="auth-hint">Codes expire after 10 minutes. Access is limited to active users in the USERS sheet.</p>
+      <p class="auth-hint" data-i18n>Codes expire after 10 minutes. Access is limited to active users in the USERS sheet.</p>
       <span id="authEnvironment" class="environment" hidden><?= environment ?></span>
     </article>
   </section>
   <div id="crmShell" class="shell" hidden>
     <aside>
-      <div class="brand"><div class="brand-mark">OT</div><div><strong id="brandName"><?= appName ?></strong><small>Google Sheets edition</small><span id="environmentLabel" class="environment" hidden></span></div></div>
+      <div class="brand"><div class="brand-mark">OT</div><div><strong id="brandName"><?= appName ?></strong><small data-i18n>Google Sheets edition</small><span id="environmentLabel" class="environment" hidden></span></div></div>
       <nav aria-label="Main navigation">
-        <button class="active" data-view="dashboard">Dashboard</button>
+        <button class="active" data-view="dashboard" data-i18n>Dashboard</button>
         <button data-view="leads">Leads</button>
-        <button data-view="followups">Follow-ups<span id="followUpBadge" class="nav-badge" hidden>0</span></button>
-        <button data-action="new">New lead</button>
-        <button id="usersNav" data-view="users" hidden>Users</button>
+        <button data-view="followups"><span data-i18n>Follow-ups</span><span id="followUpBadge" class="nav-badge" hidden>0</span></button>
+        <button data-action="new" data-i18n>New lead</button>
+        <button id="usersNav" data-view="users" hidden data-i18n>Users</button>
       </nav>
-      <div class="aside-note">Open-source sample · No customer data is bundled.</div>
+      <div class="aside-note" data-i18n>Open-source sample · No customer data is bundled.</div>
     </aside>
     <main id="app" class="loading" aria-busy="true">
       <header class="topbar">
-        <div><h1 id="pageTitle">Sales overview</h1><p>Leads, bookings and installment payments in one workspace.</p></div>
-        <div class="user-actions"><div class="user-chip"><strong id="userName">Loading…</strong><small id="userRole"></small></div><button id="signOutButton" class="btn btn-secondary" type="button">Sign out</button></div>
+        <div><h1 id="pageTitle" data-i18n>Sales overview</h1><p data-i18n>Leads, bookings and installment payments in one workspace.</p></div>
+        <div class="user-actions"><div class="user-chip"><strong id="userName">Loading…</strong><small id="userRole"></small></div><button id="signOutButton" class="btn btn-secondary" type="button" data-i18n>Sign out</button></div>
       </header>
 
       <section id="dashboard" class="view active">
         <div class="grid-kpi">
-          <article class="card kpi"><span>Accessible leads</span><strong id="kpiLeads">—</strong></article>
-          <article class="card kpi"><span>Pipeline</span><strong id="kpiPipeline">—</strong></article>
-          <article class="card kpi"><span>Confirmed sales</span><strong id="kpiSales">—</strong></article>
-          <article class="card kpi"><span>Outstanding balance</span><strong id="kpiOutstanding">—</strong></article>
-          <article class="card kpi"><span>Overdue follow-ups</span><strong id="kpiOverdue">—</strong></article>
-          <article class="card kpi"><span>Win rate</span><strong id="kpiConversion">—</strong></article>
+          <article class="card kpi"><span data-i18n>Accessible leads</span><strong id="kpiLeads">—</strong></article>
+          <article class="card kpi"><span data-i18n>Pipeline</span><strong id="kpiPipeline">—</strong></article>
+          <article class="card kpi"><span data-i18n>Confirmed sales</span><strong id="kpiSales">—</strong></article>
+          <article class="card kpi"><span data-i18n>Outstanding balance</span><strong id="kpiOutstanding">—</strong></article>
+          <article class="card kpi"><span data-i18n>Overdue follow-ups</span><strong id="kpiOverdue">—</strong></article>
+          <article class="card kpi"><span data-i18n>Win rate</span><strong id="kpiConversion">—</strong></article>
         </div>
-        <article class="card section"><div class="section-head"><div><h2>Recent leads</h2><p>Your latest commercial activity.</p></div><button class="btn btn-secondary" data-view="leads">View all</button></div><div id="recentList" class="list"></div></article>
+        <article class="card section"><div class="section-head"><div><h2 data-i18n>Recent leads</h2><p data-i18n>Your latest commercial activity.</p></div><button class="btn btn-secondary" data-view="leads" data-i18n>View all</button></div><div id="recentList" class="list"></div></article>
       </section>
 
       <section id="leads" class="view">
         <article class="card section">
-          <div class="section-head"><div><h2>Lead directory</h2><p>Search by name, phone, destination, status or ID.</p></div><button class="btn btn-primary" data-action="new">New lead</button></div>
-          <div class="search"><input id="searchInput" class="input" placeholder="Search leads…" aria-label="Search leads"><select id="statusFilter" class="select" aria-label="Filter by status"><option value="">All statuses</option></select><button id="searchButton" class="btn btn-secondary">Search</button></div>
+          <div class="section-head"><div><h2 data-i18n>Lead directory</h2><p data-i18n>Search by name, phone, destination, status or ID.</p></div><button class="btn btn-primary" data-action="new" data-i18n>New lead</button></div>
+          <div class="search"><input id="searchInput" class="input" placeholder="Search leads…" data-i18n-placeholder aria-label="Search leads" data-i18n-label><select id="statusFilter" class="select" aria-label="Filter by status" data-i18n-label><option value="" data-i18n>All statuses</option></select><button id="searchButton" class="btn btn-secondary" data-i18n>Search</button></div>
           <div id="leadList" class="list" style="margin-top:16px"></div>
         </article>
       </section>
 
       <section id="followups" class="view">
         <article class="card section">
-          <div class="section-head"><div><h2>Follow-up queue</h2><p>Leads waiting for your next action, most urgent first.</p></div></div>
-          <div class="toolbar" role="group" aria-label="Follow-up range">
-            <button class="btn btn-primary" type="button" data-followup-scope="OVERDUE">Overdue</button>
-            <button class="btn btn-secondary" type="button" data-followup-scope="TODAY">Today</button>
-            <button class="btn btn-secondary" type="button" data-followup-scope="WEEK">Next 7 days</button>
+          <div class="section-head"><div><h2 data-i18n>Follow-up queue</h2><p data-i18n>Leads waiting for your next action, most urgent first.</p></div></div>
+          <div class="toolbar" role="group" aria-label="Follow-up range" data-i18n-label>
+            <button class="btn btn-primary" type="button" data-followup-scope="OVERDUE" data-i18n>Overdue</button>
+            <button class="btn btn-secondary" type="button" data-followup-scope="TODAY" data-i18n>Today</button>
+            <button class="btn btn-secondary" type="button" data-followup-scope="WEEK" data-i18n>Next 7 days</button>
           </div>
           <div id="followUpList" class="list" style="margin-top:16px"></div>
         </article>
@@ -159,15 +159,15 @@
 
       <section id="users" class="view">
         <article class="card section">
-          <div class="section-head"><div><h2>User access</h2><p>Invite, promote or disable CRM users without sharing the spreadsheet.</p></div></div>
+          <div class="section-head"><div><h2 data-i18n>User access</h2><p data-i18n>Invite, promote or disable CRM users without sharing the spreadsheet.</p></div></div>
           <form id="userForm">
             <div class="form-grid">
-              <div class="field"><label for="userEmail">Email</label><input id="userEmail" class="input" type="email" autocomplete="off" required placeholder="agent@example.com"></div>
-              <div class="field"><label for="userDisplayName">Display name</label><input id="userDisplayName" class="input" required maxlength="120" placeholder="Agent name"></div>
-              <div class="field"><label for="userRole">Role</label><select id="userRole" class="select"><option value="AGENT">Agent</option><option value="ADMIN">Administrator</option></select></div>
-              <div class="field"><label for="userActive">Access</label><select id="userActive" class="select"><option value="true">Active</option><option value="false">Disabled</option></select></div>
+              <div class="field"><label for="userEmail" data-i18n>Email</label><input id="userEmail" class="input" type="email" autocomplete="off" required placeholder="agent@example.com"></div>
+              <div class="field"><label for="userDisplayName" data-i18n>Display name</label><input id="userDisplayName" class="input" required maxlength="120" placeholder="Agent name" data-i18n-placeholder></div>
+              <div class="field"><label for="userRole" data-i18n>Role</label><select id="userRole" class="select"><option value="AGENT" data-i18n>Agent</option><option value="ADMIN" data-i18n>Administrator</option></select></div>
+              <div class="field"><label for="userActive" data-i18n>Access</label><select id="userActive" class="select"><option value="true" data-i18n>Active</option><option value="false" data-i18n>Disabled</option></select></div>
             </div>
-            <div class="toolbar" style="margin:16px 0"><button class="btn btn-primary" type="submit">Save user</button><button id="userReset" class="btn btn-secondary" type="button">Clear</button></div>
+            <div class="toolbar" style="margin:16px 0"><button class="btn btn-primary" type="submit" data-i18n>Save user</button><button id="userReset" class="btn btn-secondary" type="button" data-i18n>Clear</button></div>
           </form>
           <div id="userList" class="list"></div>
         </article>
@@ -181,17 +181,24 @@
   <div id="message" class="message" role="status" aria-live="polite" hidden></div>
   <dialog id="cancelDialog">
     <form id="cancelForm" class="dialog-body">
-      <h2>Cancel payment</h2>
-      <p>The movement will remain in the audit trail and the outstanding balance will be recalculated.</p>
+      <h2 data-i18n>Cancel payment</h2>
+      <p data-i18n>The movement will remain in the audit trail and the outstanding balance will be recalculated.</p>
       <input id="cancelPaymentId" type="hidden">
-      <label for="cancelReason">Cancellation reason</label>
-      <textarea id="cancelReason" class="textarea" maxlength="500" required placeholder="Explain why this payment is being cancelled"></textarea>
-      <div class="toolbar" style="margin-top:18px"><button class="btn btn-danger" type="submit">Confirm cancellation</button><button id="cancelClose" class="btn btn-secondary" type="button">Keep payment</button></div>
+      <label for="cancelReason" data-i18n>Cancellation reason</label>
+      <textarea id="cancelReason" class="textarea" maxlength="500" required placeholder="Explain why this payment is being cancelled" data-i18n-placeholder></textarea>
+      <div class="toolbar" style="margin-top:18px"><button class="btn btn-danger" type="submit" data-i18n>Confirm cancellation</button><button id="cancelClose" class="btn btn-secondary" type="button" data-i18n>Keep payment</button></div>
     </form>
   </dialog>
 
   <script>
     var deployedEnvironment='<?= environment ?>';
+    var I18N=JSON.parse(document.body.dataset.messageCatalogue||'{}');
+    function t(text){return I18N&&I18N[text]||text;}
+    function applyStaticTranslations(){
+      document.querySelectorAll('[data-i18n]').forEach(function(node){node.textContent=t(node.textContent.trim());});
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(function(node){node.placeholder=t(node.placeholder);});
+      document.querySelectorAll('[data-i18n-label]').forEach(function(node){node.setAttribute('aria-label',t(node.getAttribute('aria-label')));});
+    }
     var state={bootstrap:null,current:null,users:[],dirty:false,followUpScope:'OVERDUE',token:sessionStorage.getItem('otc_token')||'',email:'',messageTimer:null};
     document.addEventListener('DOMContentLoaded',start);
     document.addEventListener('click',function(event){
@@ -202,7 +209,7 @@
       var action=event.target.closest('[data-action]');
       if(!action)return;
       if(action.dataset.action==='new'){
-        if(state.dirty&&!window.confirm('Discard unsaved lead changes?'))return;
+        if(state.dirty&&!window.confirm(t('Discard unsaved lead changes?')))return;
         renderEditor(null);
       }
       if(action.dataset.action==='open')openLead(action.dataset.id);
@@ -213,6 +220,7 @@
     window.addEventListener('beforeunload',function(event){if(state.dirty){event.preventDefault();event.returnValue='';}});
 
     async function start(){
+      applyStaticTranslations();
       setEnvironmentLabels(deployedEnvironment);
       document.getElementById('emailForm').addEventListener('submit',requestCodeUi);
       document.getElementById('codeForm').addEventListener('submit',verifyCodeUi);
@@ -309,7 +317,7 @@
 
     function resetLogin(){
       state.email='';setValue('loginCode','');
-      document.getElementById('authIntro').textContent='Enter the email registered by your CRM administrator. We will send a one-time access code.';
+      document.getElementById('authIntro').textContent=t('Enter the email registered by your CRM administrator. We will send a one-time access code.');
       document.getElementById('emailForm').hidden=false;
       document.getElementById('codeForm').hidden=true;
       document.getElementById('loginEmail').focus();
@@ -345,18 +353,18 @@
       var count=Number(overdue||0);
       badge.textContent=count;
       badge.hidden=count===0;
-      badge.setAttribute('aria-label',count+' overdue follow-ups');
+      badge.setAttribute('aria-label',count+' '+t('Overdue follow-ups').toLowerCase());
     }
 
     function renderFollowUpRows(leads,today){
-      if(!leads||!leads.length)return '<div class="empty">Nothing to follow up in this range.</div>';
+      if(!leads||!leads.length)return '<div class="empty">'+esc(t('Nothing to follow up in this range.'))+'</div>';
       return leads.map(function(lead){
         var late=lead.nextFollowUp&&today&&lead.nextFollowUp<today;
         return '<article class="lead-row"><div class="lead-main"><strong>'+esc(lead.name)+'</strong><small>'+esc(lead.id)+' · '+esc(lead.phone)+'</small></div>'+
-          '<div><small>Follow-up</small><strong'+(late?' style="color:var(--red)"':'')+'>'+esc(lead.nextFollowUp||'—')+'</strong></div>'+
-          '<div><small>Next action</small><strong>'+esc(lead.nextAction||'—')+'</strong></div>'+
+          '<div><small>'+esc(t('Follow-up'))+'</small><strong'+(late?' style="color:var(--red)"':'')+'>'+esc(lead.nextFollowUp||'—')+'</strong></div>'+
+          '<div><small>'+esc(t('Next action'))+'</small><strong>'+esc(lead.nextAction||'—')+'</strong></div>'+
           '<div><span class="badge" data-status="'+esc(lead.status)+'">'+esc(label(lead.status))+'</span></div>'+
-          '<button class="btn btn-secondary" data-action="open" data-id="'+esc(lead.id)+'">Open</button></article>';
+          '<button class="btn btn-secondary" data-action="open" data-id="'+esc(lead.id)+'">'+esc(t('Open'))+'</button></article>';
       }).join('');
     }
 
@@ -370,13 +378,13 @@
     }
 
     function renderLeadRows(leads){
-      if(!leads||!leads.length)return '<div class="empty">No leads found.</div>';
+      if(!leads||!leads.length)return '<div class="empty">'+esc(t('No leads found.'))+'</div>';
       return leads.map(function(lead){
         return '<article class="lead-row"><div class="lead-main"><strong>'+esc(lead.name)+'</strong><small>'+esc(lead.id)+' · '+esc(lead.phone)+'</small></div>'+
-          '<div><small>Destination</small><strong>'+esc(lead.destination||'—')+'</strong></div>'+
-          '<div><small>Budget</small><strong>'+formatMoney(lead.budget)+'</strong></div>'+
+          '<div><small>'+esc(t('Destination'))+'</small><strong>'+esc(lead.destination||'—')+'</strong></div>'+
+          '<div><small>'+esc(t('Budget'))+'</small><strong>'+formatMoney(lead.budget)+'</strong></div>'+
           '<div><span class="badge" data-status="'+esc(lead.status)+'">'+esc(label(lead.status))+'</span></div>'+
-          '<button class="btn btn-secondary" data-action="open" data-id="'+esc(lead.id)+'">Open</button></article>';
+          '<button class="btn btn-secondary" data-action="open" data-id="'+esc(lead.id)+'">'+esc(t('Open'))+'</button></article>';
       }).join('');
     }
 
@@ -385,7 +393,7 @@
       catch(error){showMessage(errorText(error),true);}
     }
 
-    function renderLoadingEditor(){showView('editor');document.getElementById('editorContent').innerHTML='<div class="card section">Loading lead…</div>';}
+    function renderLoadingEditor(){showView('editor');document.getElementById('editorContent').innerHTML='<div class="card section">'+esc(t('Loading lead…'))+'</div>';}
 
     function renderEditor(lead){
       state.current=lead||null;state.dirty=false;showView('editor');
@@ -396,7 +404,7 @@
       var hero=lead?'<div class="profile-hero"><small>'+esc(lead.id)+'</small><h2>'+esc(lead.name)+'</h2></div>':'';
       var payments=lead?renderPayments(lead):'';
       document.getElementById('editorContent').innerHTML=hero+
-        '<article class="card section"><div class="section-head"><div><h2>'+(lead?'Edit lead':'Create lead')+'</h2><p>Customer, trip and commercial details.</p></div></div>'+
+        '<article class="card section"><div class="section-head"><div><h2>'+esc(t(lead?'Edit lead':'Create lead'))+'</h2><p>'+esc(t('Customer, trip and commercial details.'))+'</p></div></div>'+
         '<form id="leadForm"><div class="form-grid">'+
         hidden('leadId',lead&&lead.id)+
         field('Name',input('name',lead&&lead.name,'Customer name',true))+
@@ -417,7 +425,7 @@
         field('Next follow-up',dateInput('nextFollowUp',lead&&lead.nextFollowUp))+
         field('Next action',input('nextAction',lead&&lead.nextAction,'E.g. Send quote'))+
         field('Notes','<textarea id="notes" class="textarea">'+esc(lead&&lead.notes||'')+'</textarea>','full')+
-        '</div><div class="toolbar" style="margin-top:18px"><button class="btn btn-primary" type="submit">Save lead</button><button class="btn btn-secondary" type="button" data-view="leads">Back</button></div></form></article>'+payments;
+        '</div><div class="toolbar" style="margin-top:18px"><button class="btn btn-primary" type="submit">'+esc(t('Save lead'))+'</button><button class="btn btn-secondary" type="button" data-view="leads">'+esc(t('Back'))+'</button></div></form></article>'+payments;
       document.getElementById('leadForm').addEventListener('submit',saveLeadUi);
       document.getElementById('leadForm').addEventListener('input',function(){state.dirty=true;});
       var paymentForm=document.getElementById('paymentForm');
@@ -433,7 +441,7 @@
         var payload=values(['leadId','name','phone','agentEmail','source','status','service','destination','provider','locator','route','budget','saleAmount','travelStart','travelEnd','passengers','nextFollowUp','nextAction','notes']);
         payload.id=payload.leadId;payload.agentEmail=payload.agentEmail||'';
         var result=await api('saveLead',payload);
-        state.dirty=false;renderEditor(result.lead);showMessage('Lead saved.',false);
+        state.dirty=false;renderEditor(result.lead);showMessage(t('Lead saved.'),false);
         await Promise.all([loadDashboard(),search()]);
       }catch(error){showMessage(errorText(error),true);}
       finally{setFormBusy(event.currentTarget,false);}
@@ -443,42 +451,42 @@
       var summary=lead.paymentSummary||{};
       var rows=(lead.payments||[]).map(function(payment){
         var cancelled=payment.status==='CANCELLED';
-        return '<div class="payment-row '+(cancelled?'cancelled':'')+'"><div><strong>'+esc(payment.paymentDate)+' · '+formatMoney(payment.amount)+'</strong><small>'+esc(label(payment.method))+(payment.reference?' · '+esc(payment.reference):'')+(cancelled?' · Cancelled: '+esc(payment.cancellationReason):'')+'</small></div>'+
-          (!cancelled?'<div class="toolbar"><button class="btn btn-secondary" data-action="edit-payment" data-id="'+esc(payment.id)+'">Edit</button><button class="btn btn-danger" data-action="cancel-payment" data-id="'+esc(payment.id)+'">Cancel</button></div>':'')+'</div>';
-      }).join('')||'<div class="empty">No payments recorded yet.</div>';
-      return '<article class="card section"><div class="section-head"><div><h2>Installment payments</h2><p>Movements are auditable; cancellations are never deleted.</p></div></div>'+
-        '<div class="summary"><div><span>Sale total</span><strong>'+formatMoney(summary.total)+'</strong></div><div><span>Paid</span><strong>'+formatMoney(summary.paid)+'</strong></div><div><span>Balance</span><strong>'+formatMoney(summary.balance)+'</strong></div></div>'+
+        return '<div class="payment-row '+(cancelled?'cancelled':'')+'"><div><strong>'+esc(payment.paymentDate)+' · '+formatMoney(payment.amount)+'</strong><small>'+esc(label(payment.method))+(payment.reference?' · '+esc(payment.reference):'')+(cancelled?' · '+esc(t('Cancelled'))+': '+esc(payment.cancellationReason):'')+'</small></div>'+
+          (!cancelled?'<div class="toolbar"><button class="btn btn-secondary" data-action="edit-payment" data-id="'+esc(payment.id)+'">'+esc(t('Edit'))+'</button><button class="btn btn-danger" data-action="cancel-payment" data-id="'+esc(payment.id)+'">'+esc(t('Cancel'))+'</button></div>':'')+'</div>';
+      }).join('')||'<div class="empty">'+esc(t('No payments recorded yet.'))+'</div>';
+      return '<article class="card section"><div class="section-head"><div><h2>'+esc(t('Installment payments'))+'</h2><p>'+esc(t('Movements are auditable; cancellations are never deleted.'))+'</p></div></div>'+
+        '<div class="summary"><div><span>'+esc(t('Sale total'))+'</span><strong>'+formatMoney(summary.total)+'</strong></div><div><span>'+esc(t('Paid'))+'</span><strong>'+formatMoney(summary.paid)+'</strong></div><div><span>'+esc(t('Balance'))+'</span><strong>'+formatMoney(summary.balance)+'</strong></div></div>'+
         '<form id="paymentForm"><input type="hidden" id="paymentId"><div class="form-grid">'+
         field('Payment date',dateInput('paymentDate',state.bootstrap.today))+
         field('Amount',input('paymentAmount','','0.00','', 'decimal'))+
         field('Method',select('paymentMethod',state.bootstrap.options.PAYMENT_METHODS,'BANK_TRANSFER'))+
         field('Reference',input('paymentReference','','Operation or receipt number'))+
         field('Notes',input('paymentNotes','','Optional note'),'full')+
-        '</div><div class="toolbar" style="margin:16px 0"><button id="paymentSubmit" class="btn btn-primary" type="submit">Add payment</button><button id="paymentReset" class="btn btn-secondary" type="button">Clear</button></div></form><div class="list">'+rows+'</div></article>';
+        '</div><div class="toolbar" style="margin:16px 0"><button id="paymentSubmit" class="btn btn-primary" type="submit">'+esc(t('Add payment'))+'</button><button id="paymentReset" class="btn btn-secondary" type="button">'+esc(t('Clear'))+'</button></div></form><div class="list">'+rows+'</div></article>';
     }
 
     async function savePaymentUi(event){
       event.preventDefault();
-      if(state.dirty){showMessage('Save lead changes before managing payments.',true);return;}
+      if(state.dirty){showMessage(t('Save lead changes before managing payments.'),true);return;}
       setFormBusy(event.currentTarget,true);
       try{
         var payload={leadId:state.current.id,paymentId:value('paymentId'),paymentDate:value('paymentDate'),amount:value('paymentAmount'),method:value('paymentMethod'),reference:value('paymentReference'),notes:value('paymentNotes')};
-        var result=await api('savePayment',payload);renderEditor(result.lead);showMessage('Payment saved.',false);await loadDashboard();
+        var result=await api('savePayment',payload);renderEditor(result.lead);showMessage(t('Payment saved.'),false);await loadDashboard();
       }catch(error){showMessage(errorText(error),true);}
       finally{setFormBusy(event.currentTarget,false);}
     }
 
     function editPayment(id){
-      if(state.dirty){showMessage('Save lead changes before editing payments.',true);return;}
+      if(state.dirty){showMessage(t('Save lead changes before editing payments.'),true);return;}
       var payment=(state.current.payments||[]).find(function(item){return item.id===id;});
       if(!payment)return;
       setValue('paymentId',payment.id);setValue('paymentDate',payment.paymentDate);setValue('paymentAmount',payment.amount);
       setValue('paymentMethod',payment.method);setValue('paymentReference',payment.reference);setValue('paymentNotes',payment.notes);
-      document.getElementById('paymentSubmit').textContent='Update payment';
+      document.getElementById('paymentSubmit').textContent=t('Update payment');
     }
 
     async function cancelPaymentUi(id){
-      if(state.dirty){showMessage('Save lead changes before cancelling payments.',true);return;}
+      if(state.dirty){showMessage(t('Save lead changes before cancelling payments.'),true);return;}
       setValue('cancelPaymentId',id);setValue('cancelReason','');
       document.getElementById('cancelDialog').showModal();
       document.getElementById('cancelReason').focus();
@@ -487,7 +495,7 @@
     async function confirmCancelPaymentUi(event){
       event.preventDefault();
       setFormBusy(event.currentTarget,true);
-      try{var result=await api('cancelPayment',{leadId:state.current.id,paymentId:value('cancelPaymentId'),reason:value('cancelReason')});document.getElementById('cancelDialog').close();renderEditor(result.lead);showMessage('Payment cancelled and retained in the audit trail.',false);await Promise.all([loadDashboard(),search()]);}
+      try{var result=await api('cancelPayment',{leadId:state.current.id,paymentId:value('cancelPaymentId'),reason:value('cancelReason')});document.getElementById('cancelDialog').close();renderEditor(result.lead);showMessage(t('Payment cancelled and retained in the audit trail.'),false);await Promise.all([loadDashboard(),search()]);}
       catch(error){showMessage(errorText(error),true);}
       finally{setFormBusy(event.currentTarget,false);}
     }
@@ -498,9 +506,9 @@
       document.getElementById('userList').innerHTML=state.users.length?state.users.map(function(user){
         return '<article class="user-row"><div><strong>'+esc(user.displayName)+'</strong><small>'+esc(user.email)+'</small></div>'+
           '<div><span class="badge">'+esc(label(user.role))+'</span></div>'+
-          '<div><span class="badge" data-active="'+esc(user.active)+'">'+(user.active?'Active':'Disabled')+'</span></div>'+
-          '<button class="btn btn-secondary" type="button" data-action="edit-user" data-email="'+esc(user.email)+'">Edit</button></article>';
-      }).join(''):'<div class="empty">No users found.</div>';
+          '<div><span class="badge" data-active="'+esc(user.active)+'">'+esc(t(user.active?'Active':'Disabled'))+'</span></div>'+
+          '<button class="btn btn-secondary" type="button" data-action="edit-user" data-email="'+esc(user.email)+'">'+esc(t('Edit'))+'</button></article>';
+      }).join(''):'<div class="empty">'+esc(t('No users found.'))+'</div>';
     }
 
     function editUser(email){
@@ -522,24 +530,24 @@
       event.preventDefault();setFormBusy(event.currentTarget,true);
       try{
         await api('saveUser',{email:value('userEmail'),displayName:value('userDisplayName'),role:value('userRole'),active:value('userActive')==='true'});
-        resetUserForm();await loadUsers();showMessage('User access saved.',false);
+        resetUserForm();await loadUsers();showMessage(t('User access saved.'),false);
       }catch(error){showMessage(errorText(error),true);}
       finally{setFormBusy(event.currentTarget,false);}
     }
 
-    function resetPayment(){['paymentId','paymentAmount','paymentReference','paymentNotes'].forEach(function(id){setValue(id,'');});setValue('paymentDate',state.bootstrap.today);setValue('paymentMethod','BANK_TRANSFER');document.getElementById('paymentSubmit').textContent='Add payment';}
+    function resetPayment(){['paymentId','paymentAmount','paymentReference','paymentNotes'].forEach(function(id){setValue(id,'');});setValue('paymentDate',state.bootstrap.today);setValue('paymentMethod','BANK_TRANSFER');document.getElementById('paymentSubmit').textContent=t('Add payment');}
     function showView(id){
-      if(state.dirty&&id!=='editor'&&!window.confirm('Discard unsaved lead changes?'))return;
+      if(state.dirty&&id!=='editor'&&!window.confirm(t('Discard unsaved lead changes?')))return;
       if(id!=='editor')state.dirty=false;
       document.querySelectorAll('.view').forEach(function(view){view.classList.toggle('active',view.id===id);});
       document.querySelectorAll('nav [data-view]').forEach(function(button){button.classList.toggle('active',button.dataset.view===id);});
       var titles={dashboard:'Sales overview',leads:'Lead directory',followups:'Follow-up queue',editor:'Customer file',users:'User access'};
-      document.getElementById('pageTitle').textContent=titles[id]||(state.bootstrap.configuration.appName||'Open Travel CRM');
+      document.getElementById('pageTitle').textContent=titles[id]?t(titles[id]):(state.bootstrap.configuration.appName||'Open Travel CRM');
       if(id==='users')loadUsers().catch(function(error){showMessage(errorText(error),true);});
       if(id==='followups')loadFollowUps().catch(function(error){showMessage(errorText(error),true);});
     }
-    function field(name,control,extra){var match=control.match(/\sid="([^"]+)"/);return '<div class="field '+(extra||'')+'"><label'+(match?' for="'+esc(match[1])+'"':'')+'>'+esc(name)+'</label>'+control+'</div>';}
-    function input(id,val,placeholder,required,mode){return '<input id="'+id+'" class="input" value="'+esc(val===undefined||val===null?'':val)+'" placeholder="'+esc(placeholder||'')+'" '+(required?'required ':'')+(mode?'inputmode="'+mode+'"':'')+'>';}
+    function field(name,control,extra){var match=control.match(/\sid="([^"]+)"/);return '<div class="field '+(extra||'')+'"><label'+(match?' for="'+esc(match[1])+'"':'')+'>'+esc(t(name))+'</label>'+control+'</div>';}
+    function input(id,val,placeholder,required,mode){return '<input id="'+id+'" class="input" value="'+esc(val===undefined||val===null?'':val)+'" placeholder="'+esc(t(placeholder||''))+'" '+(required?'required ':'')+(mode?'inputmode="'+mode+'"':'')+'>';}
     function dateInput(id,val){return '<input id="'+id+'" class="input" type="date" value="'+esc(val||'')+'">';}
     function hidden(id,val){return '<input id="'+id+'" type="hidden" value="'+esc(val||'')+'">';}
     function select(id,options,current){return '<select id="'+id+'" class="select">'+(options||[]).map(function(option){return '<option value="'+esc(option)+'" '+(option===current?'selected':'')+'>'+esc(label(option))+'</option>';}).join('')+'</select>';}
@@ -548,12 +556,12 @@
     function value(id){var element=document.getElementById(id);return element?element.value:'';}
     function setValue(id,val){var element=document.getElementById(id);if(element)element.value=val===undefined||val===null?'':val;}
     function setText(id,text){document.getElementById(id).textContent=text;}
-    function label(value){return String(value||'').toLowerCase().replace(/_/g,' ').replace(/\b\w/g,function(char){return char.toUpperCase();});}
+    function label(value){return t(String(value||'').toLowerCase().replace(/_/g,' ').replace(/\b\w/g,function(char){return char.toUpperCase();}));}
     function locale(){return state.bootstrap&&state.bootstrap.configuration&&state.bootstrap.configuration.locale||'en-GB';}
     function formatMoney(value){var number=Number(value);var currency=state.bootstrap&&state.bootstrap.configuration&&state.bootstrap.configuration.currency||'EUR';if(!Number.isFinite(number))return '—';try{return number.toLocaleString(locale(),{style:'currency',currency:currency});}catch(error){return currency+' '+number.toFixed(2);}}
     function formatPercent(value){var number=Number(value||0);try{return number.toLocaleString(locale(),{maximumFractionDigits:1})+'%';}catch(error){return number.toFixed(1)+'%';}}
     function esc(value){return String(value===null||value===undefined?'':value).replace(/[&<>"']/g,function(char){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];});}
-    function errorText(error){return error&&error.message?error.message:String(error||'Unexpected error');}
+    function errorText(error){return error&&error.message?error.message:String(error||t('Unexpected error'));}
     function showMessage(text,isError){var message=document.getElementById('message');message.textContent=text;message.className='message'+(isError?' error':'');message.setAttribute('role',isError?'alert':'status');message.hidden=false;if(state.messageTimer)window.clearTimeout(state.messageTimer);state.messageTimer=window.setTimeout(function(){message.hidden=true;},5000);}
     function setFormBusy(form,busy){if(!form)return;form.setAttribute('aria-busy',String(busy));form.querySelectorAll('button,input,select,textarea').forEach(function(element){element.disabled=busy;});}
     function api(method){var args=[state.token].concat([].slice.call(arguments,1));return runServer(method,args);}

@@ -376,6 +376,7 @@ const context = vm.createContext({
 
 for (const file of [
   'Config.gs',
+  'I18n.gs',
   'Security.gs',
   'AuthService.gs',
   'ReservationsService.gs',
@@ -647,6 +648,38 @@ assert.equal(
   true
 );
 
+// Switching the deployment locale must translate what agents read without
+// touching the diagnostics operators and CI grep for.
+properties.TRAVEL_CRM_LOCALE = 'es-ES';
+vm.runInContext('otcRuntimeConfigCache_ = null;', context);
+assert.throws(
+  () => call('getFollowUpQueue', queueSession.token, 'YESTERYEAR'),
+  /Rango de seguimiento no válido/
+);
+assert.throws(
+  () => call('getLead', queueSession.token, 'TRV-0000-9999'),
+  /Lead no encontrado/
+);
+assert.throws(
+  () => call('getBootstrap', 'too-short'),
+  /Falta tu sesión/
+);
+assert.equal(
+  plain(call('getFollowUpQueue', queueSession.token, 'OVERDUE')).counts.OVERDUE,
+  1,
+  'Translation must not alter behaviour.'
+);
+assert.throws(
+  () => call('runStagingAcceptance', 'wrong-token-with-at-least-32-characters'),
+  /Invalid staging acceptance token/
+);
+properties.TRAVEL_CRM_LOCALE = 'en-GB';
+vm.runInContext('otcRuntimeConfigCache_ = null;', context);
+assert.throws(
+  () => call('getLead', queueSession.token, 'TRV-0000-9999'),
+  /Lead not found/
+);
+
 const health = plain(call('runHealthCheck_'));
 assert.equal(health.ok, true);
 const remoteAcceptance = plain(call(
@@ -687,5 +720,6 @@ console.log('✓ Administrator and agent ownership boundaries are enforced.');
 console.log('✓ Payments, overpayment guards, cancellations and status sync are consistent.');
 console.log('✓ Access changes invalidate sessions and retain auditable history.');
 console.log('✓ Follow-up queue scopes, ordering and ownership are correct.');
+console.log('✓ Locale switching translates agent errors and spares operator diagnostics.');
 console.log('✓ Operational health checks pass on a consistent installation.');
 console.log('✓ One-step setup can create and return a native spreadsheet.');

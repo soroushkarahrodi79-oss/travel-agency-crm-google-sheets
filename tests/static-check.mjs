@@ -104,6 +104,26 @@ check(
     allSource.includes('LockService.getScriptLock()'),
   'OTP sessions, ownership and concurrency controls are present'
 );
+// Localisation is only durable if a missing translation fails the build, so
+// every string routed through a translator must exist in the catalogue.
+const catalogue = Function(
+  `${fs.readFileSync(path.join(src, 'I18n.gs'), 'utf8')}; return OTC_MESSAGES;`
+)();
+const indexHtml = fs.readFileSync(path.join(src, 'Index.html'), 'utf8');
+const translated = [
+  ...[...allSource.matchAll(/t_\('((?:[^'\\]|\\.)*)'\)/g)].map((m) => m[1]),
+  ...[...indexHtml.matchAll(/\bt\('((?:[^'\\]|\\.)*)'\)/g)].map((m) => m[1]),
+  ...[...indexHtml.matchAll(/data-i18n>([^<]+)</g)].map((m) => m[1].trim())
+].filter((key) => key !== '');
+const untranslated = [...new Set(translated)]
+  .filter((key) => !catalogue.es[key])
+  .sort();
+check(
+  translated.length > 0 && untranslated.length === 0,
+  untranslated.length
+    ? `every user-facing string has a Spanish translation (missing: ${untranslated.join(' | ')})`
+    : `${new Set(translated).size} user-facing strings all have a Spanish translation`
+);
 check(
   allSource.includes('function getFollowUpQueue(token, scope)') &&
     allSource.includes('FOLLOW_UP_SCOPES') &&

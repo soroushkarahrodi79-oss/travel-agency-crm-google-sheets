@@ -72,36 +72,36 @@ function verifyAccessCode(emailValue, codeValue) {
     const properties = PropertiesService.getScriptProperties();
     const key = otpKey_(email);
     const stored = properties.getProperty(key);
-    if (!stored) throw new Error('The code is invalid or expired.');
+    if (!stored) throw new Error(t_('The code is invalid or expired.'));
 
     let record;
     try {
       record = JSON.parse(stored);
     } catch (error) {
       properties.deleteProperty(key);
-      throw new Error('The code is invalid or expired.');
+      throw new Error(t_('The code is invalid or expired.'));
     }
     if (Number(record.expiresAt || 0) <= Date.now()) {
       properties.deleteProperty(key);
-      throw new Error('The code has expired.');
+      throw new Error(t_('The code has expired.'));
     }
     record.attempts = Number(record.attempts || 0) + 1;
     if (record.attempts > OTC.AUTH.MAX_ATTEMPTS) {
       properties.deleteProperty(key);
-      throw new Error('Too many attempts. Request a new code.');
+      throw new Error(t_('Too many attempts. Request a new code.'));
     }
     if (!safeSignatureEquals_(
       record.codeSignature,
       signature_(email + ':' + code)
     )) {
       properties.setProperty(key, JSON.stringify(record));
-      throw new Error('The code is invalid or expired.');
+      throw new Error(t_('The code is invalid or expired.'));
     }
 
     const user = findActiveUserByEmail_(email);
     if (!user) {
       properties.deleteProperty(key);
-      throw new Error('The account is disabled or no longer registered.');
+      throw new Error(t_('The account is disabled or no longer registered.'));
     }
     const token = Utilities.getUuid() + Utilities.getUuid();
     properties.setProperty(sessionKey_(token), JSON.stringify({

@@ -12,23 +12,23 @@ function savePayment(token, input) {
       OTC.LIMITS.MAX_MONEY + '.'
     );
   }
-  if (!data.paymentDate) throw new Error('Payment date is required.');
+  if (!data.paymentDate) throw new Error(t_('Payment date is required.'));
 
   return withCrmLock_(function() {
     const lead = getLeadForMutation_(user, data.leadId);
     const sheet = getCrmSheet_(OTC.SHEETS.PAYMENTS);
     const requestedId = cleanText_(data.paymentId, 120);
     const existingRow = requestedId ? findRowById_(sheet, 1, requestedId) : 0;
-    if (requestedId && !existingRow) throw new Error('Payment not found.');
+    if (requestedId && !existingRow) throw new Error(t_('Payment not found.'));
     if (existingRow) {
       const existing = sheet.getRange(
         existingRow, 1, 1, OTC.HEADERS.PAYMENTS.length
       ).getValues()[0];
       if (cleanText_(existing[1], 120) !== lead.id) {
-        throw new Error('Payment does not belong to this lead.');
+        throw new Error(t_('Payment does not belong to this lead.'));
       }
       if (cleanText_(existing[7], 30) === 'CANCELLED') {
-        throw new Error('A cancelled payment cannot be edited.');
+        throw new Error(t_('A cancelled payment cannot be edited.'));
       }
     }
 
@@ -44,7 +44,7 @@ function savePayment(token, input) {
       );
     }
     if (otherPaid + amount > total + 0.01) {
-      throw new Error('Payment would exceed the sale total.');
+      throw new Error(t_('Payment would exceed the sale total.'));
     }
 
     const now = new Date();
@@ -85,21 +85,21 @@ function cancelPayment(token, input) {
   const data = input || {};
   const paymentId = cleanText_(data.paymentId, 120);
   const reason = cleanText_(data.reason, 500);
-  if (!paymentId || !reason) throw new Error('Payment and cancellation reason are required.');
+  if (!paymentId || !reason) throw new Error(t_('Payment and cancellation reason are required.'));
 
   return withCrmLock_(function() {
     const lead = getLeadForMutation_(user, data.leadId);
     const sheet = getCrmSheet_(OTC.SHEETS.PAYMENTS);
     const rowNumber = findRowById_(sheet, 1, paymentId);
-    if (!rowNumber) throw new Error('Payment not found.');
+    if (!rowNumber) throw new Error(t_('Payment not found.'));
     const row = sheet.getRange(
       rowNumber, 1, 1, OTC.HEADERS.PAYMENTS.length
     ).getValues()[0];
     if (cleanText_(row[1], 120) !== lead.id) {
-      throw new Error('Payment does not belong to this lead.');
+      throw new Error(t_('Payment does not belong to this lead.'));
     }
     if (cleanText_(row[7], 30) === 'CANCELLED') {
-      throw new Error('This payment is already cancelled.');
+      throw new Error(t_('This payment is already cancelled.'));
     }
     sheet.getRange(rowNumber, 8).setValue('CANCELLED');
     sheet.getRange(rowNumber, 10).setValue(new Date());
@@ -150,7 +150,7 @@ function summarizePayments_(lead, payments) {
 function getLeadForMutation_(user, leadId) {
   const sheet = getCrmSheet_(OTC.SHEETS.LEADS);
   const rowNumber = findRowById_(sheet, 1, leadId);
-  if (!rowNumber) throw new Error('Lead not found.');
+  if (!rowNumber) throw new Error(t_('Lead not found.'));
   const row = sheet.getRange(
     rowNumber, 1, 1, OTC.HEADERS.LEADS.length
   ).getValues()[0];

@@ -8,6 +8,14 @@ versioning.
 
 ### Added
 
+- Spanish interface and error messages, selected by `TRAVEL_CRM_LOCALE`. The
+  message catalogue lives in `src/I18n.gs`, ships with the first paint so the
+  sign-in screen is already translated, and falls back to English for any
+  locale without a catalogue. Operator diagnostics stay in English so
+  deployment logs and CI output keep one wording.
+- A release gate that fails the build when a user-facing string has no Spanish
+  translation, so the catalogue cannot fall behind the interface.
+
 - Follow-up work queue with overdue, today and next-seven-day scopes, ordered
   by urgency and reachable from a navigation entry that shows the overdue
   count. It reuses the existing `Next follow-up` column, so no schema change
