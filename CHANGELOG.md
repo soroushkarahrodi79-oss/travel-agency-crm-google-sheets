@@ -4,7 +4,7 @@ All notable changes follow the principles of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and semantic
 versioning.
 
-## [1.1.0] - 2026-07-24
+## [1.1.0] - 2026-07-26
 
 ### Added
 
@@ -16,6 +16,8 @@ versioning.
 - Accessible cancellation dialog and session invalidation after access changes.
 - Documentation for configuration, data schema, operations, support and upgrades.
 - Local documentation-link and release-metadata validation.
+- In-memory integration coverage for OTP, roles, ownership, leads, payments and health checks.
+- Verified tag-to-version release automation for GitHub releases.
 
 ### Changed
 

@@ -173,6 +173,20 @@ execution latency, Apps Script quotas or concurrent writes become a regular
 constraint, keep the UI and domain model but move persistence and authentication
 to services designed for higher concurrency.
 
+## Verification strategy
+
+The repository runs three complementary test layers without production data:
+
+- static contracts validate Apps Script/browser syntax, public endpoints,
+  scopes and security invariants;
+- pure unit checks exercise parsers, totals, signatures and configuration;
+- an in-memory Apps Script integration harness runs OTP sign-in, user lifecycle,
+  ownership isolation, lead writes, installments, cancellation, session
+  invalidation, auditing and the health report against the real service code.
+
+A disposable Apps Script deployment remains the recommended final acceptance
+environment before a production release.
+
 ## Extension rules
 
 Good integrations include quote emails, calendar follow-ups, Drive folders,

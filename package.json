@@ -19,7 +19,7 @@
     "url": "git+https://github.com/soroushkarahrodi79-oss/travel-agency-crm-google-sheets.git"
   },
   "scripts": {
-    "test": "node tests/static-check.mjs && node tests/unit-check.mjs",
+    "test": "node tests/static-check.mjs && node tests/unit-check.mjs && node tests/integration-check.mjs",
     "security:scan": "node scripts/security-scan.mjs",
     "docs:check": "node scripts/check-doc-links.mjs",
     "release:check": "node scripts/release-check.mjs",

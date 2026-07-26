@@ -174,6 +174,10 @@ for (const file of [
 ]) {
   check(fs.existsSync(path.join(root, file)), `${file} exists`);
 }
+check(
+  fs.existsSync(path.join(root, 'tests/integration-check.mjs')),
+  'tests/integration-check.mjs exists'
+);
 
 check(
   !fs.existsSync(path.join(root, '.clasp.json')),

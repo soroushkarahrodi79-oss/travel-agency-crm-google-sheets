@@ -32,9 +32,10 @@ npm run check
 1. Apps Script and browser syntax checks;
 2. public/private endpoint and security-contract checks;
 3. pure domain-helper tests;
-4. Markdown link validation;
-5. publication secret scanning;
-6. release metadata consistency.
+4. in-memory integration tests across authentication, authorization and payments;
+5. Markdown link validation;
+6. publication secret scanning;
+7. release metadata consistency.
 
 There are no packages required by the deployed CRM.
 
@@ -64,6 +65,9 @@ Explain:
 
 Update `CHANGELOG.md` for user-visible changes. Update the data dictionary,
 architecture, deployment or upgrading guides whenever their contracts change.
+
+Release tags use the exact `vMAJOR.MINOR.PATCH` package version. The release
+workflow reruns the full suite before creating the GitHub release.
 
 ## Schema changes
 

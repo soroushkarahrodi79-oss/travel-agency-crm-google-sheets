@@ -145,7 +145,7 @@ guidance.
 ## Quality and security
 
 ```bash
-npm test             # syntax, contracts and domain helpers
+npm test             # syntax, contracts, domain helpers and service integration
 npm run docs:check   # local Markdown links
 npm run security:scan
 npm run release:check
@@ -177,6 +177,10 @@ documents in it. Read [SECURITY.md](SECURITY.md) before production use.
 | [Operations](docs/OPERATIONS.md) | Backups, user lifecycle, monitoring and incident response |
 | [Upgrading](docs/UPGRADING.md) | Safe code and schema upgrade procedure |
 | [Security model](docs/SECURITY_MODEL.md) | Threats, controls and known limits |
+
+Tagged versions are verified again and published through the
+[release workflow](.github/workflows/release.yml). A tag must exactly match the
+package version, for example `v1.1.0`.
 
 ## Project status
 
