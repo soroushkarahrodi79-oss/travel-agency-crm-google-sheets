@@ -57,6 +57,16 @@ assert.equal(run('dateFromInput_("31/12/2026").getMonth()'), 11);
 throws('dateFromInput_("2026-02-31")', /Invalid date/);
 throws('dateFromInput_("12-31-2026")', /Invalid date/);
 
+assert.equal(run('isoShift_("2026-07-26", 7)'), '2026-08-02');
+assert.equal(run('isoShift_("2026-07-26", 0)'), '2026-07-26');
+assert.equal(run('isoShift_("2026-01-01", -1)'), '2025-12-31');
+assert.equal(run('isoShift_("2028-02-28", 1)'), '2028-02-29');
+// A daylight-saving transition must not stretch or shrink the horizon.
+assert.equal(run('isoShift_("2026-03-26", 7)'), '2026-04-02');
+assert.equal(run('isoShift_("2026-10-22", 7)'), '2026-10-29');
+assert.equal(run('isoShift_("", 7)'), '');
+assert.equal(run('isoShift_("not-a-date", 7)'), '');
+
 assert.equal(run('cellText_("=IMPORTXML(\\"x\\")", 100)'), '\'=IMPORTXML("x")');
 assert.equal(run('cellText_("+34910000000", 100)'), "'+34910000000");
 assert.equal(run('normalize_("  Málaga  ")'), 'malaga');

@@ -560,6 +560,93 @@ assert.throws(
   /expired|disabled|registered/
 );
 
+// The follow-up queue runs against a dedicated agent so the expected counts
+// stay isolated from the leads created earlier in this file, and every date is
+// derived from the runtime clock so the assertions never expire.
+plain(call('saveUser', adminSession.token, {
+  email: 'queue@example.com',
+  displayName: 'Queue Agent',
+  role: 'AGENT',
+  active: true
+}));
+call('requestAccessCode', 'queue@example.com');
+const queueSession = plain(call(
+  'verifyAccessCode',
+  'queue@example.com',
+  extractCode('queue@example.com')
+));
+
+const isoShift = functionFromRuntime('isoShift_');
+const queueToday = functionFromRuntime('dateToIso_')(new Date());
+const queueLead = (name, followUp, status, budget) => plain(call(
+  'saveLead',
+  adminSession.token,
+  {
+    name,
+    phone: '+34 600 000 900',
+    agentEmail: 'queue@example.com',
+    source: 'WEB',
+    status,
+    service: 'FLIGHT',
+    destination: 'Quito',
+    budget: budget === undefined ? '900' : budget,
+    nextFollowUp: followUp,
+    nextAction: 'Call the customer'
+  }
+)).lead;
+
+const overdueLead = queueLead('Queue Overdue', isoShift(queueToday, -1), 'NEW');
+const todayLead = queueLead('Queue Today', queueToday, 'CONTACTED');
+const weekLead = queueLead('Queue Week', isoShift(queueToday, 1), 'QUOTED');
+queueLead('Queue Beyond Horizon', isoShift(queueToday, 10), 'NEW');
+queueLead('Queue Lost', isoShift(queueToday, -1), 'LOST');
+queueLead('Queue Undated', '', 'NEW');
+// A closed lead is only left at CLOSED_WON when it carries no outstanding
+// total, so this one is created without a budget on purpose.
+queueLead('Queue Closed', isoShift(queueToday, -1), 'CLOSED_WON', '');
+
+const overdueQueue = plain(call('getFollowUpQueue', queueSession.token, 'OVERDUE'));
+assert.deepEqual(overdueQueue.leads.map((lead) => lead.id), [overdueLead.id]);
+assert.deepEqual(overdueQueue.counts, {OVERDUE: 1, TODAY: 1, WEEK: 2});
+assert.equal(overdueQueue.today, queueToday);
+assert.equal(overdueQueue.horizon, isoShift(queueToday, 7));
+assert.deepEqual(
+  plain(call('getFollowUpQueue', queueSession.token, 'TODAY'))
+    .leads.map((lead) => lead.id),
+  [todayLead.id]
+);
+// WEEK spans today through the horizon, ordered from the most urgent date.
+assert.deepEqual(
+  plain(call('getFollowUpQueue', queueSession.token, 'WEEK'))
+    .leads.map((lead) => lead.id),
+  [todayLead.id, weekLead.id]
+);
+// An unspecified scope falls back to the overdue queue.
+assert.equal(
+  plain(call('getFollowUpQueue', queueSession.token, '')).scope,
+  'OVERDUE'
+);
+assert.throws(
+  () => call('getFollowUpQueue', queueSession.token, 'YESTERYEAR'),
+  /Invalid follow-up scope/
+);
+assert.throws(
+  () => call('getFollowUpQueue', 'not-a-valid-session-token-value-123456'),
+  /session/
+);
+// Ownership still applies: an administrator supervises every agent's queue,
+// while an agent only ever sees their own.
+assert.equal(
+  plain(call('getFollowUpQueue', adminSession.token, 'OVERDUE'))
+    .leads.some((lead) => lead.id === overdueLead.id),
+  true
+);
+assert.equal(
+  plain(call('getFollowUpQueue', queueSession.token, 'WEEK'))
+    .leads.every((lead) => lead.agentEmail === 'queue@example.com'),
+  true
+);
+
 const health = plain(call('runHealthCheck_'));
 assert.equal(health.ok, true);
 const remoteAcceptance = plain(call(
@@ -599,5 +686,6 @@ console.log('✓ OTP issuance, verification and authenticated bootstrap work end
 console.log('✓ Administrator and agent ownership boundaries are enforced.');
 console.log('✓ Payments, overpayment guards, cancellations and status sync are consistent.');
 console.log('✓ Access changes invalidate sessions and retain auditable history.');
+console.log('✓ Follow-up queue scopes, ordering and ownership are correct.');
 console.log('✓ Operational health checks pass on a consistent installation.');
 console.log('✓ One-step setup can create and return a native spreadsheet.');

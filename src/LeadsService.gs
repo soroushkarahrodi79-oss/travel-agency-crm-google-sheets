@@ -71,6 +71,58 @@ function searchLeads(token, query, limit, filters) {
     .map(mapLeadRow_);
 }
 
+/**
+ * Daily follow-up work queue, ordered from the most urgent date onwards.
+ *
+ * Scopes are deliberately explicit: OVERDUE is strictly before today, TODAY is
+ * exactly today and WEEK spans today through the configured horizon. TODAY is
+ * therefore a subset of WEEK, while OVERDUE never overlaps either. Leads that
+ * are closed, lost or have no follow-up date are never queued, matching the
+ * overdue metric reported by the dashboard.
+ *
+ * Counts always cover every scope so the interface can render badges without
+ * issuing an additional request per scope.
+ */
+function getFollowUpQueue(token, scope) {
+  const user = requireUser_(token, ['ADMIN', 'AGENT']);
+  const requested = cleanText_(scope, 20).toUpperCase() || 'OVERDUE';
+  if (OTC.OPTIONS.FOLLOW_UP_SCOPES.indexOf(requested) === -1) {
+    throw new Error('Invalid follow-up scope.');
+  }
+  const today = dateToIso_(new Date());
+  const horizon = isoShift_(today, OTC.LIMITS.FOLLOW_UP_WINDOW_DAYS);
+  const counts = {OVERDUE: 0, TODAY: 0, WEEK: 0};
+  const queued = [];
+  accessibleLeadRows_(user).forEach(function(row) {
+    const status = cleanText_(row[6], 50);
+    if (status === 'CLOSED_WON' || status === 'LOST') return;
+    const followUp = dateToIso_(row[14]);
+    if (!followUp) return;
+    const scopes = [];
+    if (followUp < today) scopes.push('OVERDUE');
+    if (followUp === today) scopes.push('TODAY');
+    if (followUp >= today && followUp <= horizon) scopes.push('WEEK');
+    scopes.forEach(function(name) { counts[name]++; });
+    if (scopes.indexOf(requested) >= 0) {
+      queued.push({followUp: followUp, row: row});
+    }
+  });
+  queued.sort(function(left, right) {
+    if (left.followUp === right.followUp) return 0;
+    return left.followUp < right.followUp ? -1 : 1;
+  });
+  return {
+    scope: requested,
+    today: today,
+    horizon: horizon,
+    counts: counts,
+    total: queued.length,
+    leads: queued
+      .slice(0, OTC.LIMITS.MAX_SEARCH_RESULTS)
+      .map(function(entry) { return mapLeadRow_(entry.row); })
+  };
+}
+
 function getLead(token, leadId) {
   const user = requireUser_(token, ['ADMIN', 'AGENT']);
   return getLeadForUser_(user, leadId);

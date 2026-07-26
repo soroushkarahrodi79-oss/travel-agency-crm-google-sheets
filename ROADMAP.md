@@ -18,7 +18,7 @@ isolation, recovery and low operating complexity take priority.
 
 ## Next: daily agency workflow
 
-- [ ] Follow-up queue with today/overdue views
+- [x] Follow-up queue with today/overdue views
 - [ ] Exportable outstanding-balance and payment-aging report
 - [ ] Reusable quote and customer-email templates
 - [ ] Calendar follow-up events with idempotent sync
