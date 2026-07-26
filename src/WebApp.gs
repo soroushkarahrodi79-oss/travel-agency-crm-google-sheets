@@ -2,6 +2,7 @@ function doGet() {
   const config = getRuntimeConfig_();
   const template = HtmlService.createTemplateFromFile('Index');
   template.appName = config.appName;
+  template.environment = config.environment;
   return template.evaluate()
     .setTitle(config.appName)
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.DENY)

@@ -40,6 +40,8 @@ compliance certification or substitute for an organization-specific review.
 | Upgrade overwrites unexpected columns | Version guard and exact header compatibility check |
 | Repository leaks deployment secrets | Script Properties, ignored private files and secret scan |
 | Last administrator is removed | Administrator lifecycle invariant under lock |
+| Remote health endpoint probes production | Owner-only API, environment gate and installation-specific staging token |
+| Demo records enter a live installation | Demo seeding fails closed in `production` |
 
 ## Authentication storage
 

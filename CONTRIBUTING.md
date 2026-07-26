@@ -33,9 +33,10 @@ npm run check
 2. public/private endpoint and security-contract checks;
 3. pure domain-helper tests;
 4. in-memory integration tests across authentication, authorization and payments;
-5. Markdown link validation;
-6. publication secret scanning;
-7. release metadata consistency.
+5. staging-response contract tests;
+6. Markdown link and product-media validation;
+7. publication secret scanning;
+8. release metadata consistency.
 
 There are no packages required by the deployed CRM.
 
@@ -68,6 +69,9 @@ architecture, deployment or upgrading guides whenever their contracts change.
 
 Release tags use the exact `vMAJOR.MINOR.PATCH` package version. The release
 workflow reruns the full suite before creating the GitHub release.
+
+Changes to deployment, authorization or persistence should also run the
+manually approved `Apps Script staging` workflow before release.
 
 ## Schema changes
 

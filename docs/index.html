@@ -6,27 +6,28 @@
   <meta name="description" content="Open Travel CRM: an open-source travel agency CRM built with Google Sheets and Apps Script.">
   <title>Open Travel CRM · Interactive UI demo</title>
   <style>
-    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#132238;background:#f4f7fb;--navy:#0b2846;--blue:#2667e8;--orange:#ef8b22;--line:#d9e3ee;--muted:#63748a}*{box-sizing:border-box}body{margin:0}.notice{padding:9px 20px;text-align:center;background:#fff5e9;color:#854d0e;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.layout{min-height:calc(100vh - 36px);display:grid;grid-template-columns:235px minmax(0,1fr)}aside{background:linear-gradient(180deg,#092846,#153b66);color:#fff;padding:24px 18px}.brand{display:flex;gap:10px;align-items:center;margin-bottom:30px}.mark{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--orange);font-weight:900}.brand small,.brand strong{display:block}.brand small{opacity:.7}nav{display:grid;gap:8px}nav button{border:0;border-radius:11px;padding:12px;text-align:left;background:transparent;color:#c8d8e8;font-weight:700;cursor:pointer}nav button:hover,nav button.active{background:#ffffff1f;color:#fff}main{min-width:0;padding:28px}.top{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:24px}.top h1{margin:0;font-size:36px;letter-spacing:-.04em}.top p{color:var(--muted);margin:6px 0}.github,.button{padding:11px 15px;border-radius:11px;border:0;background:#132238;color:#fff;text-decoration:none;font-weight:800;cursor:pointer}.button{background:var(--blue)}.screen{display:none}.screen.active{display:block}.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:14px}.card{background:#fff;border:1px solid var(--line);border-radius:17px;box-shadow:0 16px 45px #0f284611}.kpi{padding:20px}.kpi span{font-size:12px;color:var(--muted)}.kpi strong{display:block;font-size:28px;margin-top:8px;color:#12385f}.list,.form-card{margin-top:20px;padding:22px}.list h2,.form-card h2{margin:0 0 4px}.list>p,.form-card>p{margin:0 0 18px;color:var(--muted)}.row{display:grid;grid-template-columns:1.5fr 1fr 1fr auto;gap:14px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:13px;margin-top:10px}.row small,.row strong{display:block}.row small{color:var(--muted);margin-top:3px}.badge{padding:6px 9px;border-radius:99px;background:#eaf1ff;color:#174ea6;font-size:10px;font-weight:900}.badge.active{background:#e7f7ef;color:#08714d}.demo-note{margin-top:18px;padding:14px;border:1px dashed #b8c8d8;border-radius:13px;color:var(--muted);font-size:13px}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.field label{display:block;margin-bottom:6px;color:#29435f;font-size:12px;font-weight:800}.field.full{grid-column:1/-1}.input{width:100%;min-height:45px;padding:10px 12px;border:1px solid #cbd8e6;border-radius:11px;background:#fff;color:#132238;font:inherit}.input:focus{outline:3px solid #2667e822;border-color:var(--blue)}.actions{display:flex;align-items:center;gap:12px;margin-top:18px}.status{color:#15805d;font-size:13px;font-weight:700}
+    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#132238;background:#f4f7fb;--navy:#0b2846;--blue:#2667e8;--orange:#ef8b22;--line:#d9e3ee;--muted:#63748a}*{box-sizing:border-box}body{margin:0}.notice{padding:9px 20px;text-align:center;background:#fff5e9;color:#854d0e;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.layout{min-height:calc(100vh - 36px);display:grid;grid-template-columns:235px minmax(0,1fr)}aside{background:linear-gradient(180deg,#092846,#153b66);color:#fff;padding:24px 18px}.brand{display:flex;gap:10px;align-items:center;margin-bottom:30px}.mark{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--orange);font-weight:900}.brand small,.brand strong{display:block}.brand small{opacity:.7}.version{display:inline-flex;margin-top:8px;padding:4px 7px;border-radius:99px;background:#ffffff1a;color:#ddebfa;font-size:10px;font-weight:900}nav{display:grid;gap:8px}nav button{border:0;border-radius:11px;padding:12px;text-align:left;background:transparent;color:#c8d8e8;font-weight:700;cursor:pointer}nav button:hover,nav button.active{background:#ffffff1f;color:#fff}.tour{margin-top:24px;width:100%;border:1px solid #ffffff33;background:#ffffff10;color:#fff}.tour.playing{background:var(--orange);border-color:var(--orange)}main{min-width:0;padding:28px}.top{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:24px}.top h1{margin:0;font-size:36px;letter-spacing:-.04em}.top p{color:var(--muted);margin:6px 0}.top-actions{display:flex;gap:9px;align-items:center}.github,.deploy,.button{padding:11px 15px;border-radius:11px;border:0;background:#132238;color:#fff;text-decoration:none;font-weight:800;cursor:pointer}.deploy,.button{background:var(--blue)}.screen{display:none}.screen.active{display:block;animation:reveal .28s ease-out}.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:14px}.card{background:#fff;border:1px solid var(--line);border-radius:17px;box-shadow:0 16px 45px #0f284611}.kpi{padding:20px}.kpi span{font-size:12px;color:var(--muted)}.kpi strong{display:block;font-size:28px;margin-top:8px;color:#12385f}.list,.form-card{margin-top:20px;padding:22px}.list h2,.form-card h2{margin:0 0 4px}.list>p,.form-card>p{margin:0 0 18px;color:var(--muted)}.row{display:grid;grid-template-columns:1.5fr 1fr 1fr auto;gap:14px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:13px;margin-top:10px}.row small,.row strong{display:block}.row small{color:var(--muted);margin-top:3px}.badge{padding:6px 9px;border-radius:99px;background:#eaf1ff;color:#174ea6;font-size:10px;font-weight:900}.badge.active{background:#e7f7ef;color:#08714d}.demo-note{margin-top:18px;padding:14px;border:1px dashed #b8c8d8;border-radius:13px;color:var(--muted);font-size:13px}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.field label{display:block;margin-bottom:6px;color:#29435f;font-size:12px;font-weight:800}.field.full{grid-column:1/-1}.input{width:100%;min-height:45px;padding:10px 12px;border:1px solid #cbd8e6;border-radius:11px;background:#fff;color:#132238;font:inherit}.input:focus{outline:3px solid #2667e822;border-color:var(--blue)}.actions{display:flex;align-items:center;gap:12px;margin-top:18px}.status{color:#15805d;font-size:13px;font-weight:700}@keyframes reveal{from{opacity:.2;transform:translateY(5px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.screen.active{animation:none}}
     @media(max-width:900px){.layout{grid-template-columns:1fr}aside{padding:14px}nav{grid-template-columns:repeat(2,1fr)}.brand{margin-bottom:12px}.kpis{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:1fr 1fr}.row>div:first-child{grid-column:1/-1}}
-    @media(max-width:560px){.notice{font-size:11px;padding:7px 10px;white-space:normal}.layout{min-height:calc(100vh - 29px)}main{padding:18px}.top h1{font-size:28px}.github{display:none}.kpis,.row,.form-grid{grid-template-columns:1fr}.row>div:first-child,.field.full{grid-column:auto}.actions{align-items:flex-start;flex-direction:column}}
+    @media(max-width:560px){.notice{font-size:11px;padding:7px 10px;white-space:normal}.layout{min-height:calc(100vh - 29px)}main{padding:18px}.top h1{font-size:28px}.github{display:none}.top-actions{align-items:stretch;flex-direction:column}.kpis,.row,.form-grid{grid-template-columns:1fr}.row>div:first-child,.field.full{grid-column:auto}.actions{align-items:flex-start;flex-direction:column}}
   </style>
 </head>
 <body>
   <div class="notice" title="Fictional static demo — no spreadsheet connection">Fictional static demo · No spreadsheet connection · Nothing is submitted</div>
   <div class="layout">
     <aside>
-      <div class="brand"><div class="mark">OT</div><div><strong>Open Travel CRM</strong><small>Google Sheets edition</small></div></div>
+      <div class="brand"><div class="mark">OT</div><div><strong>Open Travel CRM</strong><small>Google Sheets edition</small><span class="version">v1.2 preview</span></div></div>
       <nav aria-label="Demo navigation">
         <button class="active" type="button" data-screen="dashboard">Dashboard</button>
         <button type="button" data-screen="leads">Leads</button>
         <button type="button" data-screen="new">New lead</button>
         <button type="button" data-screen="users">Users</button>
       </nav>
+      <button id="tourButton" class="button tour" type="button">Play product tour</button>
     </aside>
     <main>
       <header class="top">
         <div><h1 id="demoTitle">Sales overview</h1><p id="demoSubtitle">Leads, bookings and installment payments in one workspace.</p></div>
-        <a class="github" href="https://github.com/soroushkarahrodi79-oss/travel-agency-crm-google-sheets">View on GitHub</a>
+        <div class="top-actions"><a class="github" href="assets/product-tour.mp4">12-sec tour</a><a class="github" href="https://github.com/soroushkarahrodi79-oss/travel-agency-crm-google-sheets">View on GitHub</a><a class="deploy" href="https://github.com/soroushkarahrodi79-oss/travel-agency-crm-google-sheets/blob/main/docs/DEPLOYMENT.md">Deploy your own</a></div>
       </header>
 
       <section id="screen-dashboard" class="screen active">
@@ -81,14 +82,36 @@
       new:['Create a lead','Destination, provider, locator, route, dates and first payment.'],
       users:['User access','Invite, promote and disable users without sharing the spreadsheet.']
     };
+    var tourTimer=null;
+    function showScreen(screen){
+      if(!titles[screen])screen='dashboard';
+      document.querySelectorAll('[data-screen]').forEach(function(item){item.classList.toggle('active',item.dataset.screen===screen);});
+      document.querySelectorAll('.screen').forEach(function(item){item.classList.toggle('active',item.id==='screen-'+screen);});
+      document.getElementById('demoTitle').textContent=titles[screen][0];
+      document.getElementById('demoSubtitle').textContent=titles[screen][1];
+      history.replaceState(null,'','#'+screen);
+    }
     document.querySelectorAll('[data-screen]').forEach(function(button){
-      button.addEventListener('click',function(){
-        var screen=button.dataset.screen;
-        document.querySelectorAll('[data-screen]').forEach(function(item){item.classList.toggle('active',item===button);});
-        document.querySelectorAll('.screen').forEach(function(item){item.classList.toggle('active',item.id==='screen-'+screen);});
-        document.getElementById('demoTitle').textContent=titles[screen][0];
-        document.getElementById('demoSubtitle').textContent=titles[screen][1];
-      });
+      button.addEventListener('click',function(){stopTour();showScreen(button.dataset.screen);});
+    });
+    function stopTour(){
+      if(tourTimer)window.clearInterval(tourTimer);
+      tourTimer=null;
+      document.getElementById('tourButton').classList.remove('playing');
+      document.getElementById('tourButton').textContent='Play product tour';
+    }
+    document.getElementById('tourButton').addEventListener('click',function(){
+      if(tourTimer){stopTour();return;}
+      var steps=['dashboard','leads','new','users'];
+      var index=0;
+      showScreen(steps[index]);
+      this.classList.add('playing');
+      this.textContent='Stop product tour';
+      tourTimer=window.setInterval(function(){
+        index+=1;
+        if(index>=steps.length){stopTour();return;}
+        showScreen(steps[index]);
+      },3500);
     });
     document.getElementById('demoForm').addEventListener('submit',function(event){
       event.preventDefault();
@@ -99,6 +122,7 @@
       status.textContent='Looks good — no data was submitted.';
       status.style.color='#15805d';
     });
+    showScreen(location.hash.slice(1));
   </script>
 </body>
 </html>

@@ -11,6 +11,7 @@ Keep an internal record of:
 - spreadsheet owner and approved editors;
 - deployment-owner account and recovery owner;
 - configured locale, currency and time zone;
+- declared environment (`production`, `staging` or `demo`);
 - backup location, frequency and retention period.
 
 Do not place secrets or customer data in a public issue.
@@ -32,6 +33,7 @@ Do not place secrets or customer data in a public issue.
 3. Check Apps Script quota usage and execution latency.
 4. Pull upstream security and maintenance releases into the fork.
 5. Run `npm run check` against the deployed source version.
+6. Run the protected **Apps Script staging** workflow before production updates.
 
 ## User lifecycle
 

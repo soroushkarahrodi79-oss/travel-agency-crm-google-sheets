@@ -4,6 +4,26 @@ All notable changes follow the principles of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and semantic
 versioning.
 
+## [1.2.0] - 2026-07-26
+
+### Added
+
+- One-step installer that can create the native Google Sheets data store and
+  infer the executing account as the first administrator.
+- Explicit `production`, `staging` and `demo` environments with visible
+  non-production badges.
+- Secret-gated remote staging acceptance through the Apps Script Execution API.
+- Version-pinned, on-demand `clasp` tooling, a configuration doctor and a
+  manually approved staging deployment workflow.
+- Linkable demo screens, verified product screenshots, a compact MP4 and an
+  accessible automated product tour.
+
+### Changed
+
+- Demo seeding is blocked in production environments.
+- Installation results include the spreadsheet URL, creation state and next
+  operational steps.
+
 ## [1.1.0] - 2026-07-26
 
 ### Added

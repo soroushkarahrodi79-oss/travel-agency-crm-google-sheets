@@ -125,13 +125,15 @@ assert.deepEqual(
     appName: 'Open Travel CRM',
     currency: 'EUR',
     locale: 'en-GB',
-    timeZone: 'Europe/Madrid'
+    timeZone: 'Europe/Madrid',
+    environment: 'production'
   }
 );
 runtimeProperties.TRAVEL_CRM_APP_NAME = 'Atlas Travel Desk';
 runtimeProperties.TRAVEL_CRM_CURRENCY = 'usd';
 runtimeProperties.TRAVEL_CRM_LOCALE = 'en-US';
 runtimeProperties.TRAVEL_CRM_TIME_ZONE = 'America/New_York';
+runtimeProperties.TRAVEL_CRM_ENVIRONMENT = 'staging';
 run('otcRuntimeConfigCache_ = null');
 assert.deepEqual(
   JSON.parse(run('JSON.stringify(getRuntimeConfig_())')),
@@ -139,12 +141,17 @@ assert.deepEqual(
     appName: 'Atlas Travel Desk',
     currency: 'USD',
     locale: 'en-US',
-    timeZone: 'America/New_York'
+    timeZone: 'America/New_York',
+    environment: 'staging'
   }
 );
 runtimeProperties.TRAVEL_CRM_CURRENCY = 'US';
 run('otcRuntimeConfigCache_ = null');
 throws('getRuntimeConfig_()', /ISO 4217/);
+runtimeProperties.TRAVEL_CRM_CURRENCY = 'USD';
+runtimeProperties.TRAVEL_CRM_ENVIRONMENT = 'preview';
+run('otcRuntimeConfigCache_ = null');
+throws('getRuntimeConfig_()', /production, staging or demo/);
 
 console.log('✓ Currency parsing is international, bounded and rejects malformed input.');
 console.log('✓ Dates reject rollover and ambiguous formats.');

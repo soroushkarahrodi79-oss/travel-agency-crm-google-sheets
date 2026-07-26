@@ -12,6 +12,9 @@ isolation, recovery and low operating complexity take priority.
 - [x] Web-based user administration
 - [x] Versioned schema checks and operational health report
 - [x] CI, secret scanning, release checks and operational documentation
+- [x] One-step native Sheet setup and production/demo separation
+- [x] Secret-gated remote acceptance workflow for a protected staging project
+- [x] Interactive demo, verified screenshots and compact product tour
 
 ## Next: daily agency workflow
 
