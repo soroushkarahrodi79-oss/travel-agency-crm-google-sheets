@@ -67,7 +67,11 @@ function audit_(user, action, entityType, entityId, details) {
 }
 
 function publicUser_(user) {
-  return {displayName: user.displayName, role: user.role};
+  return {
+    email: user.email,
+    displayName: user.displayName,
+    role: user.role
+  };
 }
 
 function ensureAuthSecret_() {
@@ -99,4 +103,24 @@ function sessionKey_(token) {
 
 function rateKey_(email) {
   return OTC.AUTH.RATE_PREFIX + signature_(normalize_(email)).substring(0, 40);
+}
+
+function invalidateUserSessions_(emailValue) {
+  const email = cleanText_(emailValue, 200).toLowerCase();
+  const properties = PropertiesService.getScriptProperties();
+  const all = properties.getProperties();
+  let invalidated = 0;
+  Object.keys(all).forEach(function(key) {
+    if (key.indexOf(OTC.AUTH.SESSION_PREFIX) !== 0) return;
+    try {
+      const session = JSON.parse(all[key]);
+      if (cleanText_(session.email, 200).toLowerCase() === email) {
+        properties.deleteProperty(key);
+        invalidated++;
+      }
+    } catch (error) {
+      properties.deleteProperty(key);
+    }
+  });
+  return invalidated;
 }

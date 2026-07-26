@@ -14,6 +14,9 @@
     body{margin:0;background:var(--canvas);color:var(--ink)}
     button,input,select,textarea{font:inherit}
     button{cursor:pointer}
+    button:disabled{cursor:wait;opacity:.62}
+    .skip-link{position:fixed;left:12px;top:-60px;z-index:30;background:#fff;color:var(--navy);padding:10px 14px;border-radius:10px;box-shadow:var(--shadow)}
+    .skip-link:focus{top:12px}
     .shell{min-height:100vh;display:grid;grid-template-columns:250px minmax(0,1fr)}
     aside{background:linear-gradient(180deg,var(--navy-2),var(--navy));color:#fff;padding:26px 18px;position:sticky;top:0;height:100vh}
     .brand{display:flex;align-items:center;gap:12px;margin:0 8px 32px}
@@ -30,7 +33,7 @@
     .user-chip{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 14px;box-shadow:0 8px 24px rgba(15,40,70,.06)}
     .user-chip strong,.user-chip small{display:block}.user-chip small{color:var(--muted);margin-top:2px}
     .view{display:none}.view.active{display:block}
-    .grid-kpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:22px}
+    .grid-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:14px;margin-bottom:22px}
     .card{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
     .kpi{padding:20px}.kpi span{display:block;color:var(--muted);font-size:13px}.kpi strong{display:block;margin-top:8px;font-size:28px;color:var(--navy)}
     .section{padding:22px;margin-bottom:20px}
@@ -47,11 +50,14 @@
     .btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:#1554cf}
     .btn-secondary{background:#fff;color:var(--navy);border:1px solid var(--line)}
     .btn-danger{background:#fff;color:var(--red);border:1px solid #f0c6c1}
-    .search{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}
+    .search{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,240px) auto;gap:10px}
     .list{display:grid;gap:10px}
     .lead-row{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(3,minmax(110px,.7fr)) auto;gap:14px;align-items:center;padding:15px;border:1px solid var(--line);border-radius:14px;background:#fff}
     .lead-row strong,.lead-row small{display:block}.lead-row small{color:var(--muted);margin-top:3px}
     .badge{display:inline-flex;align-items:center;width:max-content;padding:6px 9px;border-radius:999px;background:#eaf1ff;color:#174ea6;font-size:11px;font-weight:900}
+    .badge[data-status="CLOSED_WON"],.badge[data-active="true"]{background:#e7f7ef;color:#08714d}
+    .badge[data-status="LOST"],.badge[data-active="false"]{background:#fff0ee;color:#a73428}
+    .badge[data-status="BOOKED_PENDING_PAYMENT"]{background:#fff4df;color:#8a5300}
     .empty{padding:40px 20px;text-align:center;color:var(--muted);border:1px dashed #bdcad8;border-radius:14px}
     .profile-hero{padding:20px;border-radius:16px;background:linear-gradient(115deg,var(--navy-2),#255d91);color:#fff;margin-bottom:18px}
     .profile-hero small{color:#c9dcef}.profile-hero h2{margin:5px 0 0;font-size:28px}
@@ -68,16 +74,23 @@
     .auth-card h1{margin:0;font-size:30px;letter-spacing:-.04em}.auth-card p{color:var(--muted);line-height:1.55}.auth-form{display:grid;gap:14px;margin-top:22px}
     .auth-form .btn{width:100%}.auth-hint{font-size:12px;color:var(--muted)}
     .user-actions{display:flex;align-items:center;gap:10px}.user-actions .btn{min-height:40px;padding:8px 12px}
+    .user-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(110px,.6fr) minmax(90px,.4fr) auto;gap:14px;align-items:center;padding:15px;border:1px solid var(--line);border-radius:14px;background:#fff}
+    .user-row strong,.user-row small{display:block}.user-row small{color:var(--muted);margin-top:3px}
+    dialog{width:min(520px,calc(100% - 32px));border:0;border-radius:18px;padding:0;box-shadow:0 24px 90px rgba(11,40,70,.28);color:var(--ink)}
+    dialog::backdrop{background:rgba(11,40,70,.55);backdrop-filter:blur(3px)}
+    .dialog-body{padding:24px}.dialog-body h2{margin:0 0 8px}.dialog-body p{margin:0 0 18px;color:var(--muted)}
+    .visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
     [hidden]{display:none!important}
     @media(max-width:1000px){.grid-kpi{grid-template-columns:repeat(2,1fr)}.lead-row{grid-template-columns:1fr 1fr}.lead-row .lead-main{grid-column:1/-1}}
-    @media(max-width:720px){.shell{grid-template-columns:1fr}aside{position:static;height:auto;padding:14px}nav{grid-template-columns:repeat(3,1fr)}.aside-note{display:none}.brand{margin:0 0 12px}main{padding:18px}.topbar{align-items:flex-start}.user-chip{display:none}.grid-kpi,.form-grid,.summary{grid-template-columns:1fr}.lead-row{grid-template-columns:1fr}.search{grid-template-columns:1fr}}
+    @media(max-width:720px){.shell{grid-template-columns:1fr}aside{position:static;height:auto;padding:14px}nav{grid-template-columns:repeat(2,1fr)}.aside-note{display:none}.brand{margin:0 0 12px}main{padding:18px}.topbar{align-items:flex-start}.user-chip{display:none}.grid-kpi,.form-grid,.summary{grid-template-columns:1fr}.lead-row,.user-row{grid-template-columns:1fr}.search{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#app">Skip to main content</a>
   <section id="authScreen" class="auth-screen">
     <article class="card auth-card">
       <div class="auth-logo">OT</div>
-      <h1>Open Travel CRM</h1>
+      <h1 id="authBrand"><?= appName ?></h1>
       <p id="authIntro">Enter the email registered by your CRM administrator. We will send a one-time access code.</p>
       <form id="emailForm" class="auth-form">
         <div><label for="loginEmail">Work email</label><input id="loginEmail" class="input" type="email" autocomplete="email" required placeholder="agent&#64;example.com"></div>
@@ -93,15 +106,16 @@
   </section>
   <div id="crmShell" class="shell" hidden>
     <aside>
-      <div class="brand"><div class="brand-mark">OT</div><div><strong>Open Travel CRM</strong><small>Google Sheets edition</small></div></div>
+      <div class="brand"><div class="brand-mark">OT</div><div><strong id="brandName"><?= appName ?></strong><small>Google Sheets edition</small></div></div>
       <nav aria-label="Main navigation">
         <button class="active" data-view="dashboard">Dashboard</button>
         <button data-view="leads">Leads</button>
         <button data-action="new">New lead</button>
+        <button id="usersNav" data-view="users" hidden>Users</button>
       </nav>
       <div class="aside-note">Open-source sample · No customer data is bundled.</div>
     </aside>
-    <main id="app" class="loading">
+    <main id="app" class="loading" aria-busy="true">
       <header class="topbar">
         <div><h1 id="pageTitle">Sales overview</h1><p>Leads, bookings and installment payments in one workspace.</p></div>
         <div class="user-actions"><div class="user-chip"><strong id="userName">Loading…</strong><small id="userRole"></small></div><button id="signOutButton" class="btn btn-secondary" type="button">Sign out</button></div>
@@ -112,7 +126,9 @@
           <article class="card kpi"><span>Accessible leads</span><strong id="kpiLeads">—</strong></article>
           <article class="card kpi"><span>Pipeline</span><strong id="kpiPipeline">—</strong></article>
           <article class="card kpi"><span>Confirmed sales</span><strong id="kpiSales">—</strong></article>
-          <article class="card kpi"><span>Pending payment</span><strong id="kpiPending">—</strong></article>
+          <article class="card kpi"><span>Outstanding balance</span><strong id="kpiOutstanding">—</strong></article>
+          <article class="card kpi"><span>Overdue follow-ups</span><strong id="kpiOverdue">—</strong></article>
+          <article class="card kpi"><span>Win rate</span><strong id="kpiConversion">—</strong></article>
         </div>
         <article class="card section"><div class="section-head"><div><h2>Recent leads</h2><p>Your latest commercial activity.</p></div><button class="btn btn-secondary" data-view="leads">View all</button></div><div id="recentList" class="list"></div></article>
       </section>
@@ -120,8 +136,24 @@
       <section id="leads" class="view">
         <article class="card section">
           <div class="section-head"><div><h2>Lead directory</h2><p>Search by name, phone, destination, status or ID.</p></div><button class="btn btn-primary" data-action="new">New lead</button></div>
-          <div class="search"><input id="searchInput" class="input" placeholder="Search leads…" aria-label="Search leads"><button id="searchButton" class="btn btn-secondary">Search</button></div>
+          <div class="search"><input id="searchInput" class="input" placeholder="Search leads…" aria-label="Search leads"><select id="statusFilter" class="select" aria-label="Filter by status"><option value="">All statuses</option></select><button id="searchButton" class="btn btn-secondary">Search</button></div>
           <div id="leadList" class="list" style="margin-top:16px"></div>
+        </article>
+      </section>
+
+      <section id="users" class="view">
+        <article class="card section">
+          <div class="section-head"><div><h2>User access</h2><p>Invite, promote or disable CRM users without sharing the spreadsheet.</p></div></div>
+          <form id="userForm">
+            <div class="form-grid">
+              <div class="field"><label for="userEmail">Email</label><input id="userEmail" class="input" type="email" autocomplete="off" required placeholder="agent@example.com"></div>
+              <div class="field"><label for="userDisplayName">Display name</label><input id="userDisplayName" class="input" required maxlength="120" placeholder="Agent name"></div>
+              <div class="field"><label for="userRole">Role</label><select id="userRole" class="select"><option value="AGENT">Agent</option><option value="ADMIN">Administrator</option></select></div>
+              <div class="field"><label for="userActive">Access</label><select id="userActive" class="select"><option value="true">Active</option><option value="false">Disabled</option></select></div>
+            </div>
+            <div class="toolbar" style="margin:16px 0"><button class="btn btn-primary" type="submit">Save user</button><button id="userReset" class="btn btn-secondary" type="button">Clear</button></div>
+          </form>
+          <div id="userList" class="list"></div>
         </article>
       </section>
 
@@ -130,21 +162,36 @@
       </section>
     </main>
   </div>
-  <div id="message" class="message" hidden></div>
+  <div id="message" class="message" role="status" aria-live="polite" hidden></div>
+  <dialog id="cancelDialog">
+    <form id="cancelForm" class="dialog-body">
+      <h2>Cancel payment</h2>
+      <p>The movement will remain in the audit trail and the outstanding balance will be recalculated.</p>
+      <input id="cancelPaymentId" type="hidden">
+      <label for="cancelReason">Cancellation reason</label>
+      <textarea id="cancelReason" class="textarea" maxlength="500" required placeholder="Explain why this payment is being cancelled"></textarea>
+      <div class="toolbar" style="margin-top:18px"><button class="btn btn-danger" type="submit">Confirm cancellation</button><button id="cancelClose" class="btn btn-secondary" type="button">Keep payment</button></div>
+    </form>
+  </dialog>
 
   <script>
-    var state={bootstrap:null,current:null,dirty:false,token:sessionStorage.getItem('otc_token')||'',email:''};
+    var state={bootstrap:null,current:null,users:[],dirty:false,token:sessionStorage.getItem('otc_token')||'',email:'',messageTimer:null};
     document.addEventListener('DOMContentLoaded',start);
     document.addEventListener('click',function(event){
       var viewButton=event.target.closest('[data-view]');
       if(viewButton){showView(viewButton.dataset.view);return;}
       var action=event.target.closest('[data-action]');
       if(!action)return;
-      if(action.dataset.action==='new')renderEditor(null);
+      if(action.dataset.action==='new'){
+        if(state.dirty&&!window.confirm('Discard unsaved lead changes?'))return;
+        renderEditor(null);
+      }
       if(action.dataset.action==='open')openLead(action.dataset.id);
       if(action.dataset.action==='edit-payment')editPayment(action.dataset.id);
       if(action.dataset.action==='cancel-payment')cancelPaymentUi(action.dataset.id);
+      if(action.dataset.action==='edit-user')editUser(action.dataset.email);
     });
+    window.addEventListener('beforeunload',function(event){if(state.dirty){event.preventDefault();event.returnValue='';}});
 
     async function start(){
       document.getElementById('emailForm').addEventListener('submit',requestCodeUi);
@@ -153,6 +200,11 @@
       document.getElementById('signOutButton').addEventListener('click',signOutUi);
       document.getElementById('searchButton').addEventListener('click',search);
       document.getElementById('searchInput').addEventListener('keydown',function(e){if(e.key==='Enter')search();});
+      document.getElementById('statusFilter').addEventListener('change',search);
+      document.getElementById('userForm').addEventListener('submit',saveUserUi);
+      document.getElementById('userReset').addEventListener('click',resetUserForm);
+      document.getElementById('cancelForm').addEventListener('submit',confirmCancelPaymentUi);
+      document.getElementById('cancelClose').addEventListener('click',function(){document.getElementById('cancelDialog').close();});
       if(!state.token){showLogin();return;}
       await startApp();
     }
@@ -160,10 +212,18 @@
     async function startApp(){
       try{
         state.bootstrap=await api('getBootstrap');
+        var configuration=state.bootstrap.configuration||{};
+        document.title=configuration.appName||'Open Travel CRM';
+        setText('authBrand',configuration.appName||'Open Travel CRM');
+        setText('brandName',configuration.appName||'Open Travel CRM');
         document.getElementById('userName').textContent=state.bootstrap.user.displayName;
         document.getElementById('userRole').textContent=state.bootstrap.user.role+' · v'+state.bootstrap.version;
+        document.getElementById('usersNav').hidden=!state.bootstrap.capabilities.manageUsers;
+        document.getElementById('statusFilter').innerHTML='<option value="">All statuses</option>'+
+          state.bootstrap.options.STATUSES.map(function(status){return '<option value="'+esc(status)+'">'+esc(label(status))+'</option>';}).join('');
         await Promise.all([loadDashboard(),search()]);
         document.getElementById('app').classList.remove('loading');
+        document.getElementById('app').setAttribute('aria-busy','false');
         document.getElementById('authScreen').hidden=true;
         document.getElementById('crmShell').hidden=false;
       }catch(error){
@@ -228,16 +288,19 @@
     async function loadDashboard(){
       var data=await api('getDashboard');
       setText('kpiLeads',data.total);
-      setText('kpiPipeline',euros(data.pipeline));
-      setText('kpiSales',euros(data.sales));
-      setText('kpiPending',data.byStatus.BOOKED_PENDING_PAYMENT||0);
+      setText('kpiPipeline',formatMoney(data.pipeline));
+      setText('kpiSales',formatMoney(data.sales));
+      setText('kpiOutstanding',formatMoney(data.outstanding));
+      setText('kpiOverdue',data.overdueFollowUps);
+      setText('kpiConversion',formatPercent(data.conversionRate));
       document.getElementById('recentList').innerHTML=renderLeadRows(data.recent);
     }
 
     async function search(){
       try{
         var query=document.getElementById('searchInput').value||'';
-        var leads=await api('searchLeads',query,50);
+        var filters={status:document.getElementById('statusFilter').value||''};
+        var leads=await api('searchLeads',query,50,filters);
         document.getElementById('leadList').innerHTML=renderLeadRows(leads);
       }catch(error){showMessage(errorText(error),true);}
     }
@@ -247,8 +310,8 @@
       return leads.map(function(lead){
         return '<article class="lead-row"><div class="lead-main"><strong>'+esc(lead.name)+'</strong><small>'+esc(lead.id)+' · '+esc(lead.phone)+'</small></div>'+
           '<div><small>Destination</small><strong>'+esc(lead.destination||'—')+'</strong></div>'+
-          '<div><small>Budget</small><strong>'+euros(lead.budget)+'</strong></div>'+
-          '<div><span class="badge">'+esc(label(lead.status))+'</span></div>'+
+          '<div><small>Budget</small><strong>'+formatMoney(lead.budget)+'</strong></div>'+
+          '<div><span class="badge" data-status="'+esc(lead.status)+'">'+esc(label(lead.status))+'</span></div>'+
           '<button class="btn btn-secondary" data-action="open" data-id="'+esc(lead.id)+'">Open</button></article>';
       }).join('');
     }
@@ -264,7 +327,7 @@
       state.current=lead||null;state.dirty=false;showView('editor');
       var reservation=lead&&lead.reservation||{};
       var ownerField=state.bootstrap.user.role==='ADMIN'
-        ? field('Agent','<select id="agentEmail" class="select">'+agentOptions(lead&&lead.agentEmail)+'</select>')
+        ? field('Owner','<select id="agentEmail" class="select">'+agentOptions(lead&&lead.agentEmail)+'</select>')
         : '';
       var hero=lead?'<div class="profile-hero"><small>'+esc(lead.id)+'</small><h2>'+esc(lead.name)+'</h2></div>':'';
       var payments=lead?renderPayments(lead):'';
@@ -295,10 +358,13 @@
       document.getElementById('leadForm').addEventListener('input',function(){state.dirty=true;});
       var paymentForm=document.getElementById('paymentForm');
       if(paymentForm)paymentForm.addEventListener('submit',savePaymentUi);
+      var paymentReset=document.getElementById('paymentReset');
+      if(paymentReset)paymentReset.addEventListener('click',resetPayment);
     }
 
     async function saveLeadUi(event){
       event.preventDefault();
+      setFormBusy(event.currentTarget,true);
       try{
         var payload=values(['leadId','name','phone','agentEmail','source','status','service','destination','provider','locator','route','budget','saleAmount','travelStart','travelEnd','passengers','nextFollowUp','nextAction','notes']);
         payload.id=payload.leadId;payload.agentEmail=payload.agentEmail||'';
@@ -306,33 +372,36 @@
         state.dirty=false;renderEditor(result.lead);showMessage('Lead saved.',false);
         await Promise.all([loadDashboard(),search()]);
       }catch(error){showMessage(errorText(error),true);}
+      finally{setFormBusy(event.currentTarget,false);}
     }
 
     function renderPayments(lead){
       var summary=lead.paymentSummary||{};
       var rows=(lead.payments||[]).map(function(payment){
         var cancelled=payment.status==='CANCELLED';
-        return '<div class="payment-row '+(cancelled?'cancelled':'')+'"><div><strong>'+esc(payment.paymentDate)+' · '+euros(payment.amount)+'</strong><small>'+esc(label(payment.method))+(payment.reference?' · '+esc(payment.reference):'')+(cancelled?' · Cancelled: '+esc(payment.cancellationReason):'')+'</small></div>'+
+        return '<div class="payment-row '+(cancelled?'cancelled':'')+'"><div><strong>'+esc(payment.paymentDate)+' · '+formatMoney(payment.amount)+'</strong><small>'+esc(label(payment.method))+(payment.reference?' · '+esc(payment.reference):'')+(cancelled?' · Cancelled: '+esc(payment.cancellationReason):'')+'</small></div>'+
           (!cancelled?'<div class="toolbar"><button class="btn btn-secondary" data-action="edit-payment" data-id="'+esc(payment.id)+'">Edit</button><button class="btn btn-danger" data-action="cancel-payment" data-id="'+esc(payment.id)+'">Cancel</button></div>':'')+'</div>';
       }).join('')||'<div class="empty">No payments recorded yet.</div>';
       return '<article class="card section"><div class="section-head"><div><h2>Installment payments</h2><p>Movements are auditable; cancellations are never deleted.</p></div></div>'+
-        '<div class="summary"><div><span>Sale total</span><strong>'+euros(summary.total)+'</strong></div><div><span>Paid</span><strong>'+euros(summary.paid)+'</strong></div><div><span>Balance</span><strong>'+euros(summary.balance)+'</strong></div></div>'+
+        '<div class="summary"><div><span>Sale total</span><strong>'+formatMoney(summary.total)+'</strong></div><div><span>Paid</span><strong>'+formatMoney(summary.paid)+'</strong></div><div><span>Balance</span><strong>'+formatMoney(summary.balance)+'</strong></div></div>'+
         '<form id="paymentForm"><input type="hidden" id="paymentId"><div class="form-grid">'+
         field('Payment date',dateInput('paymentDate',state.bootstrap.today))+
         field('Amount',input('paymentAmount','','0.00','', 'decimal'))+
         field('Method',select('paymentMethod',state.bootstrap.options.PAYMENT_METHODS,'BANK_TRANSFER'))+
         field('Reference',input('paymentReference','','Operation or receipt number'))+
         field('Notes',input('paymentNotes','','Optional note'),'full')+
-        '</div><div class="toolbar" style="margin:16px 0"><button id="paymentSubmit" class="btn btn-primary" type="submit">Add payment</button><button id="paymentReset" class="btn btn-secondary" type="button" onclick="resetPayment()">Clear</button></div></form><div class="list">'+rows+'</div></article>';
+        '</div><div class="toolbar" style="margin:16px 0"><button id="paymentSubmit" class="btn btn-primary" type="submit">Add payment</button><button id="paymentReset" class="btn btn-secondary" type="button">Clear</button></div></form><div class="list">'+rows+'</div></article>';
     }
 
     async function savePaymentUi(event){
       event.preventDefault();
       if(state.dirty){showMessage('Save lead changes before managing payments.',true);return;}
+      setFormBusy(event.currentTarget,true);
       try{
         var payload={leadId:state.current.id,paymentId:value('paymentId'),paymentDate:value('paymentDate'),amount:value('paymentAmount'),method:value('paymentMethod'),reference:value('paymentReference'),notes:value('paymentNotes')};
         var result=await api('savePayment',payload);renderEditor(result.lead);showMessage('Payment saved.',false);await loadDashboard();
       }catch(error){showMessage(errorText(error),true);}
+      finally{setFormBusy(event.currentTarget,false);}
     }
 
     function editPayment(id){
@@ -346,28 +415,82 @@
 
     async function cancelPaymentUi(id){
       if(state.dirty){showMessage('Save lead changes before cancelling payments.',true);return;}
-      var reason=window.prompt('Cancellation reason:');if(!reason)return;
-      try{var result=await api('cancelPayment',{leadId:state.current.id,paymentId:id,reason:reason});renderEditor(result.lead);showMessage('Payment cancelled and retained in the audit trail.',false);await loadDashboard();}
+      setValue('cancelPaymentId',id);setValue('cancelReason','');
+      document.getElementById('cancelDialog').showModal();
+      document.getElementById('cancelReason').focus();
+    }
+
+    async function confirmCancelPaymentUi(event){
+      event.preventDefault();
+      setFormBusy(event.currentTarget,true);
+      try{var result=await api('cancelPayment',{leadId:state.current.id,paymentId:value('cancelPaymentId'),reason:value('cancelReason')});document.getElementById('cancelDialog').close();renderEditor(result.lead);showMessage('Payment cancelled and retained in the audit trail.',false);await Promise.all([loadDashboard(),search()]);}
       catch(error){showMessage(errorText(error),true);}
+      finally{setFormBusy(event.currentTarget,false);}
+    }
+
+    async function loadUsers(){
+      if(!state.bootstrap.capabilities.manageUsers)return;
+      state.users=await api('listUsers');
+      document.getElementById('userList').innerHTML=state.users.length?state.users.map(function(user){
+        return '<article class="user-row"><div><strong>'+esc(user.displayName)+'</strong><small>'+esc(user.email)+'</small></div>'+
+          '<div><span class="badge">'+esc(label(user.role))+'</span></div>'+
+          '<div><span class="badge" data-active="'+esc(user.active)+'">'+(user.active?'Active':'Disabled')+'</span></div>'+
+          '<button class="btn btn-secondary" type="button" data-action="edit-user" data-email="'+esc(user.email)+'">Edit</button></article>';
+      }).join(''):'<div class="empty">No users found.</div>';
+    }
+
+    function editUser(email){
+      var user=state.users.find(function(item){return item.email===email;});
+      if(!user)return;
+      setValue('userEmail',user.email);setValue('userDisplayName',user.displayName);
+      setValue('userRole',user.role);setValue('userActive',String(user.active));
+      document.getElementById('userEmail').readOnly=true;
+      document.getElementById('userDisplayName').focus();
+    }
+
+    function resetUserForm(){
+      ['userEmail','userDisplayName'].forEach(function(id){setValue(id,'');});
+      setValue('userRole','AGENT');setValue('userActive','true');
+      document.getElementById('userEmail').readOnly=false;
+    }
+
+    async function saveUserUi(event){
+      event.preventDefault();setFormBusy(event.currentTarget,true);
+      try{
+        await api('saveUser',{email:value('userEmail'),displayName:value('userDisplayName'),role:value('userRole'),active:value('userActive')==='true'});
+        resetUserForm();await loadUsers();showMessage('User access saved.',false);
+      }catch(error){showMessage(errorText(error),true);}
+      finally{setFormBusy(event.currentTarget,false);}
     }
 
     function resetPayment(){['paymentId','paymentAmount','paymentReference','paymentNotes'].forEach(function(id){setValue(id,'');});setValue('paymentDate',state.bootstrap.today);setValue('paymentMethod','BANK_TRANSFER');document.getElementById('paymentSubmit').textContent='Add payment';}
-    function showView(id){document.querySelectorAll('.view').forEach(function(view){view.classList.toggle('active',view.id===id);});document.querySelectorAll('nav [data-view]').forEach(function(button){button.classList.toggle('active',button.dataset.view===id);});var titles={dashboard:'Sales overview',leads:'Lead directory',editor:'Customer file'};document.getElementById('pageTitle').textContent=titles[id]||'Open Travel CRM';}
-    function field(name,control,extra){return '<div class="field '+(extra||'')+'"><label>'+esc(name)+'</label>'+control+'</div>';}
+    function showView(id){
+      if(state.dirty&&id!=='editor'&&!window.confirm('Discard unsaved lead changes?'))return;
+      if(id!=='editor')state.dirty=false;
+      document.querySelectorAll('.view').forEach(function(view){view.classList.toggle('active',view.id===id);});
+      document.querySelectorAll('nav [data-view]').forEach(function(button){button.classList.toggle('active',button.dataset.view===id);});
+      var titles={dashboard:'Sales overview',leads:'Lead directory',editor:'Customer file',users:'User access'};
+      document.getElementById('pageTitle').textContent=titles[id]||(state.bootstrap.configuration.appName||'Open Travel CRM');
+      if(id==='users')loadUsers().catch(function(error){showMessage(errorText(error),true);});
+    }
+    function field(name,control,extra){var match=control.match(/\sid="([^"]+)"/);return '<div class="field '+(extra||'')+'"><label'+(match?' for="'+esc(match[1])+'"':'')+'>'+esc(name)+'</label>'+control+'</div>';}
     function input(id,val,placeholder,required,mode){return '<input id="'+id+'" class="input" value="'+esc(val===undefined||val===null?'':val)+'" placeholder="'+esc(placeholder||'')+'" '+(required?'required ':'')+(mode?'inputmode="'+mode+'"':'')+'>';}
     function dateInput(id,val){return '<input id="'+id+'" class="input" type="date" value="'+esc(val||'')+'">';}
     function hidden(id,val){return '<input id="'+id+'" type="hidden" value="'+esc(val||'')+'">';}
     function select(id,options,current){return '<select id="'+id+'" class="select">'+(options||[]).map(function(option){return '<option value="'+esc(option)+'" '+(option===current?'selected':'')+'>'+esc(label(option))+'</option>';}).join('')+'</select>';}
-    function agentOptions(current){var options=state.bootstrap.agents||[];return options.map(function(agent){return '<option value="'+esc(agent.email)+'" '+(agent.email===current?'selected':'')+'>'+esc(agent.name)+' · '+esc(agent.email)+'</option>';}).join('');}
+    function agentOptions(current){var options=state.bootstrap.assignableUsers||[];var known=options.some(function(agent){return agent.email===current;});var unavailable=current&&!known?'<option value="'+esc(current)+'" selected disabled>Unavailable owner · '+esc(current)+'</option>':'';return unavailable+options.map(function(agent){return '<option value="'+esc(agent.email)+'" '+(agent.email===current?'selected':'')+'>'+esc(agent.name)+' · '+esc(label(agent.role))+' · '+esc(agent.email)+'</option>';}).join('');}
     function values(ids){var out={};ids.forEach(function(id){out[id]=value(id);});return out;}
     function value(id){var element=document.getElementById(id);return element?element.value:'';}
     function setValue(id,val){var element=document.getElementById(id);if(element)element.value=val===undefined||val===null?'':val;}
     function setText(id,text){document.getElementById(id).textContent=text;}
     function label(value){return String(value||'').toLowerCase().replace(/_/g,' ').replace(/\b\w/g,function(char){return char.toUpperCase();});}
-    function euros(value){var number=Number(value);return Number.isFinite(number)?number.toLocaleString('en-GB',{style:'currency',currency:'EUR'}):'—';}
+    function locale(){return state.bootstrap&&state.bootstrap.configuration&&state.bootstrap.configuration.locale||'en-GB';}
+    function formatMoney(value){var number=Number(value);var currency=state.bootstrap&&state.bootstrap.configuration&&state.bootstrap.configuration.currency||'EUR';if(!Number.isFinite(number))return '—';try{return number.toLocaleString(locale(),{style:'currency',currency:currency});}catch(error){return currency+' '+number.toFixed(2);}}
+    function formatPercent(value){var number=Number(value||0);try{return number.toLocaleString(locale(),{maximumFractionDigits:1})+'%';}catch(error){return number.toFixed(1)+'%';}}
     function esc(value){return String(value===null||value===undefined?'':value).replace(/[&<>"']/g,function(char){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];});}
     function errorText(error){return error&&error.message?error.message:String(error||'Unexpected error');}
-    function showMessage(text,isError){var message=document.getElementById('message');message.textContent=text;message.className='message'+(isError?' error':'');message.hidden=false;window.setTimeout(function(){message.hidden=true;},5000);}
+    function showMessage(text,isError){var message=document.getElementById('message');message.textContent=text;message.className='message'+(isError?' error':'');message.setAttribute('role',isError?'alert':'status');message.hidden=false;if(state.messageTimer)window.clearTimeout(state.messageTimer);state.messageTimer=window.setTimeout(function(){message.hidden=true;},5000);}
+    function setFormBusy(form,busy){if(!form)return;form.setAttribute('aria-busy',String(busy));form.querySelectorAll('button,input,select,textarea').forEach(function(element){element.disabled=busy;});}
     function api(method){var args=[state.token].concat([].slice.call(arguments,1));return runServer(method,args);}
     function publicApi(method){return runServer(method,[].slice.call(arguments,1));}
     function runServer(method,args){return new Promise(function(resolve,reject){var runner=google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);runner[method].apply(runner,args);});}

@@ -13,8 +13,7 @@ const rules = [
   ['Google API key', /\bAIza[A-Za-z0-9_-]{30,}\b/],
   ['Apps Script deployment ID', /\bAKfycb[A-Za-z0-9_-]{20,}\b/],
   ['hard-coded spreadsheet ID', /SpreadsheetApp\.openById\(\s*['"][A-Za-z0-9_-]{20,}['"]/],
-  ['hard-coded Script ID', /"scriptId"\s*:\s*"(?!YOUR_)[A-Za-z0-9_-]{20,}"/],
-  ['personal email in deployable source', /src[\\/].*:[^\n]*[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i]
+  ['hard-coded Script ID', /"scriptId"\s*:\s*"(?!YOUR_)[A-Za-z0-9_-]{20,}"/]
 ];
 
 function walk(directory) {
@@ -31,10 +30,18 @@ function walk(directory) {
     if (buffer.includes(0)) continue;
     const text = buffer.toString('utf8');
     for (const [name, pattern] of rules) {
-      const candidate = name === 'personal email in deployable source'
-        ? `${relative}:${text}`
-        : text;
-      if (pattern.test(candidate)) findings.push(`${name}: ${relative}`);
+      if (pattern.test(text)) findings.push(`${name}: ${relative}`);
+    }
+    if (relative.split(path.sep)[0] === 'src') {
+      for (const match of text.matchAll(
+        /\b[A-Z0-9._%+-]+@([A-Z0-9.-]+\.[A-Z]{2,})\b/gi
+      )) {
+        const domain = String(match[1] || '').toLowerCase();
+        if (!['example.com', 'example.org', 'example.net'].includes(domain)) {
+          findings.push(`personal email in deployable source: ${relative}`);
+          break;
+        }
+      }
     }
   }
 }

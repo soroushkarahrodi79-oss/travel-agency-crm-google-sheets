@@ -63,7 +63,7 @@ const allSource = gsFiles
 for (const name of [
   'requestAccessCode', 'verifyAccessCode', 'signOut', 'getBootstrap',
   'getDashboard', 'searchLeads', 'getLead', 'saveLead', 'savePayment',
-  'cancelPayment'
+  'cancelPayment', 'listUsers', 'saveUser'
 ]) {
   check(
     new RegExp(`function\\s+${name}\\s*\\(`).test(allSource),
@@ -74,6 +74,7 @@ for (const name of [
 check(
   allSource.includes('function setupTravelCrm_(') &&
     allSource.includes('function seedDemoData_(') &&
+    allSource.includes('function runHealthCheck_(') &&
     !allSource.includes('function setupTravelCrm(') &&
     !allSource.includes('function seedDemoData('),
   'installer and demo seed cannot be called from the browser'
@@ -84,6 +85,8 @@ check(
     allSource.includes('MAX_ATTEMPTS') &&
     allSource.includes('MAX_EMAILS_PER_WINDOW') &&
     allSource.includes('SESSION_TTL_MS') &&
+    allSource.includes('safeSignatureEquals_') &&
+    allSource.includes('Access-code email delivery failed') &&
     allSource.includes('assertLeadAccess_') &&
     allSource.includes('LockService.getScriptLock()'),
   'OTP sessions, ownership and concurrency controls are present'
@@ -95,8 +98,26 @@ check(
 );
 check(
   allSource.includes("'CANCELLED'") &&
-    allSource.includes('Payment would exceed the sale total'),
-  'payments retain cancellations and prevent overpayment'
+    allSource.includes('Payment would exceed the sale total') &&
+    allSource.includes('before adding payments') &&
+    allSource.includes('syncLeadPaymentStatus_') &&
+    allSource.includes('active payments exist'),
+  'payments retain cancellations and keep financial state consistent'
+);
+check(
+  allSource.includes('TRAVEL_CRM_SCHEMA_VERSION') &&
+    allSource.includes('assertCompatibleHeaders_') &&
+    allSource.includes('buildHealthReport_') &&
+    allSource.includes('countDuplicateKeys_') &&
+    allSource.includes('countRelationshipIssues_') &&
+    allSource.includes('setup will not downgrade it'),
+  'schema compatibility and operational health checks are present'
+);
+check(
+  /function\s+listUsers\s*\(token\)[\s\S]*?requireUser_\(token,\s*\['ADMIN'\]\)/.test(allSource) &&
+    /function\s+saveUser\s*\(token,\s*input\)[\s\S]*?requireUser_\(token,\s*\['ADMIN'\]\)/.test(allSource) &&
+    allSource.includes('at least one active administrator'),
+  'user lifecycle endpoints are administrator-only and preserve an admin'
 );
 check(
   !/\bMJM\b/i.test(allSource) &&
@@ -114,6 +135,19 @@ check(
 check(
   !index.includes('http://') && !index.includes('https://'),
   'runtime UI has no external network dependency'
+);
+check(
+  !/\sonclick=|\sonsubmit=|\sonchange=/i.test(index) &&
+    index.includes('cancelDialog') &&
+    index.includes('beforeunload'),
+  'runtime UI avoids inline handlers and protects destructive or unsaved actions'
+);
+check(
+  index.includes('configuration.currency') &&
+    index.includes('configuration.locale') &&
+    index.includes('assignableUsers') &&
+    index.includes('data-view="users"'),
+  'runtime UI consumes deployment configuration and admin capabilities'
 );
 
 const manifest = JSON.parse(
@@ -134,10 +168,16 @@ check(
 for (const file of [
   'README.md', 'README.es.md', 'LICENSE', 'SECURITY.md', 'CONTRIBUTING.md',
   'CODE_OF_CONDUCT.md', 'CHANGELOG.md', 'ROADMAP.md', 'CITATION.cff',
-  'docs/ARCHITECTURE.md', 'docs/DEPLOYMENT.md', 'docs/SECURITY_MODEL.md'
+  'SUPPORT.md', 'docs/ARCHITECTURE.md', 'docs/CONFIGURATION.md',
+  'docs/DATA_DICTIONARY.md', 'docs/DEPLOYMENT.md', 'docs/OPERATIONS.md',
+  'docs/SECURITY_MODEL.md', 'docs/UPGRADING.md'
 ]) {
   check(fs.existsSync(path.join(root, file)), `${file} exists`);
 }
+check(
+  fs.existsSync(path.join(root, 'tests/integration-check.mjs')),
+  'tests/integration-check.mjs exists'
+);
 
 check(
   !fs.existsSync(path.join(root, '.clasp.json')),

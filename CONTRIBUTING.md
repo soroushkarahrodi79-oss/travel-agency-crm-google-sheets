@@ -1,37 +1,88 @@
 # Contributing
 
-Thank you for improving Open Travel CRM.
+Thank you for improving Open Travel CRM. Focused bug fixes, security reviews,
+accessibility improvements, documentation and tested product changes are
+welcome.
 
-## Before opening a pull request
+## Ground rules
 
-1. Create a focused branch.
-2. Use fictional data in tests, screenshots and examples.
-3. Run:
+- Use fictional records, emails and identifiers in tests and screenshots.
+- Never commit a real `.clasp.json`, OAuth credential, deployment URL or Sheet ID.
+- Keep authorization, ownership and financial rules on the server.
+- Preserve cancelled financial movements and user history.
+- Treat header changes as schema migrations, not formatting edits.
+- Maintain keyboard access, visible focus and responsive layouts.
+- Keep runtime dependencies at zero unless an architectural proposal justifies them.
 
-   ```bash
-   npm test
-   npm run security:scan
-   ```
+Read [the architecture](docs/ARCHITECTURE.md) and
+[security model](docs/SECURITY_MODEL.md) before changing authentication,
+payments, user administration or sheet schemas.
 
-4. Explain the user impact and security implications.
-5. Update documentation when behavior changes.
+## Local workflow
 
-## Design principles
+Requirements: Node.js 20+.
 
-- Server authorization beats browser convenience.
-- Never trust owner, role or totals received from the client.
-- Preserve auditable financial movements.
-- Keep runtime dependencies at zero unless clearly justified.
-- Prefer backward-compatible sheet changes and explicit migrations.
-- Maintain keyboard access, visible focus and responsive forms.
+```bash
+npm install
+npm run check
+```
 
-## Pull request scope
+`npm run check` runs:
 
-Keep pull requests small enough to review. Do not mix formatting-only changes
-with authorization or payment logic.
+1. Apps Script and browser syntax checks;
+2. public/private endpoint and security-contract checks;
+3. pure domain-helper tests;
+4. in-memory integration tests across authentication, authorization and payments;
+5. Markdown link validation;
+6. publication secret scanning;
+7. release metadata consistency.
 
-## Security work
+There are no packages required by the deployed CRM.
 
-Report vulnerabilities privately according to [SECURITY.md](SECURITY.md).
-Public pull requests must not contain real deployment identifiers or customer
-data.
+## Branches and commits
+
+Create a focused branch from the latest `main`. Prefer clear conventional-style
+commit subjects such as:
+
+```text
+fix: prevent stale sessions after role changes
+feat: add follow-up queue
+docs: document backup recovery test
+```
+
+Do not mix broad formatting changes with authorization or payment logic.
+
+## Pull requests
+
+Explain:
+
+- the user or operational problem;
+- the chosen behavior and alternatives considered;
+- authorization, privacy and financial impact;
+- schema or deployment impact;
+- tests performed;
+- rollback or recovery considerations.
+
+Update `CHANGELOG.md` for user-visible changes. Update the data dictionary,
+architecture, deployment or upgrading guides whenever their contracts change.
+
+Release tags use the exact `vMAJOR.MINOR.PATCH` package version. The release
+workflow reruns the full suite before creating the GitHub release.
+
+## Schema changes
+
+Row 1 of every managed sheet is a versioned interface. A schema pull request
+must include:
+
+- a new schema version;
+- an explicit, idempotent migration;
+- backup and rollback instructions;
+- tests for old and new states;
+- updated `docs/DATA_DICTIONARY.md`.
+
+Never make `setupTravelCrm_()` silently reorder unknown production data.
+
+## Security reports
+
+Do not open a public pull request or issue for an exploitable vulnerability.
+Follow [SECURITY.md](SECURITY.md).

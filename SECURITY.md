@@ -4,6 +4,11 @@
 
 Security fixes are provided for the latest release on the `main` branch.
 
+| Version | Supported |
+| --- | --- |
+| 1.1.x | Yes |
+| 1.0.x | Upgrade recommended |
+
 ## Private reporting
 
 Do not publish vulnerabilities, customer information, spreadsheet IDs, access

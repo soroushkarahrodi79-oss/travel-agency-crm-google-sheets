@@ -1,6 +1,9 @@
 function doGet() {
-  return HtmlService.createHtmlOutputFromFile('Index')
-    .setTitle('Open Travel CRM')
+  const config = getRuntimeConfig_();
+  const template = HtmlService.createTemplateFromFile('Index');
+  template.appName = config.appName;
+  return template.evaluate()
+    .setTitle(config.appName)
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.DENY)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
@@ -12,7 +15,11 @@ function getBootstrap(token) {
     version: OTC.VERSION,
     user: publicUser_(user),
     options: OTC.OPTIONS,
-    agents: user.role === 'ADMIN' ? listAgentEmails_() : [],
+    assignableUsers: user.role === 'ADMIN' ? listAssignableUsers_() : [],
+    configuration: getRuntimeConfig_(),
+    capabilities: {
+      manageUsers: user.role === 'ADMIN'
+    },
     today: dateToIso_(new Date())
   };
 }

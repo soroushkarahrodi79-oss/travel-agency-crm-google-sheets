@@ -1,12 +1,31 @@
 /**
  * Open Travel CRM — shared configuration and value helpers.
- * All deployment-specific values live in Apps Script Properties.
+ * Deployment-specific values live in Apps Script Properties.
  */
 const OTC = Object.freeze({
-  VERSION: '1.0.0',
+  VERSION: '1.1.0',
+  SCHEMA_VERSION: 1,
   PROPERTY_SPREADSHEET_ID: 'TRAVEL_CRM_SPREADSHEET_ID',
   PROPERTY_ADMIN_EMAIL: 'TRAVEL_CRM_ADMIN_EMAIL',
-  TIME_ZONE: 'Europe/Madrid',
+  PROPERTIES: Object.freeze({
+    APP_NAME: 'TRAVEL_CRM_APP_NAME',
+    CURRENCY: 'TRAVEL_CRM_CURRENCY',
+    LOCALE: 'TRAVEL_CRM_LOCALE',
+    TIME_ZONE: 'TRAVEL_CRM_TIME_ZONE',
+    SCHEMA_VERSION: 'TRAVEL_CRM_SCHEMA_VERSION',
+    INSTALL_ID: 'TRAVEL_CRM_INSTALL_ID'
+  }),
+  DEFAULTS: Object.freeze({
+    APP_NAME: 'Open Travel CRM',
+    CURRENCY: 'EUR',
+    LOCALE: 'en-GB',
+    TIME_ZONE: 'Europe/Madrid'
+  }),
+  LIMITS: Object.freeze({
+    MAX_MONEY: 1000000000,
+    MAX_SEARCH_RESULTS: 100,
+    LOCK_TIMEOUT_MS: 20000
+  }),
   AUTH: Object.freeze({
     SECRET_PROPERTY: 'TRAVEL_CRM_AUTH_SECRET',
     OTP_PREFIX: 'TRAVEL_CRM_OTP_',
@@ -57,20 +76,86 @@ const OTC = Object.freeze({
   })
 });
 
+let otcSpreadsheetCache_ = null;
+let otcRuntimeConfigCache_ = null;
+let otcValidatedSheets_ = {};
+
 function getCrmSpreadsheet_() {
-  const id = PropertiesService.getScriptProperties()
-    .getProperty(OTC.PROPERTY_SPREADSHEET_ID);
+  if (otcSpreadsheetCache_) return otcSpreadsheetCache_;
+  const properties = PropertiesService.getScriptProperties();
+  const id = properties.getProperty(OTC.PROPERTY_SPREADSHEET_ID);
   if (!id) {
     throw new Error(
       'CRM is not configured. Set Script Properties and run setupTravelCrm_().'
     );
   }
-  return SpreadsheetApp.openById(id);
+  const schema = Number(
+    properties.getProperty(OTC.PROPERTIES.SCHEMA_VERSION) || 0
+  );
+  if (schema !== OTC.SCHEMA_VERSION) {
+    throw new Error(
+      'CRM schema is not ready for this version. Run setupTravelCrm_() ' +
+      'from the Apps Script editor and review the upgrading guide.'
+    );
+  }
+  otcSpreadsheetCache_ = SpreadsheetApp.openById(id);
+  return otcSpreadsheetCache_;
+}
+
+function getRuntimeConfig_() {
+  if (otcRuntimeConfigCache_) return otcRuntimeConfigCache_;
+  const properties = PropertiesService.getScriptProperties();
+  const appName = cleanText_(
+    properties.getProperty(OTC.PROPERTIES.APP_NAME) || OTC.DEFAULTS.APP_NAME,
+    80
+  ).replace(/[\r\n]+/g, ' ');
+  const currency = cleanText_(
+    properties.getProperty(OTC.PROPERTIES.CURRENCY) || OTC.DEFAULTS.CURRENCY,
+    3
+  ).toUpperCase();
+  const locale = cleanText_(
+    properties.getProperty(OTC.PROPERTIES.LOCALE) || OTC.DEFAULTS.LOCALE,
+    20
+  );
+  const timeZone = cleanText_(
+    properties.getProperty(OTC.PROPERTIES.TIME_ZONE) || OTC.DEFAULTS.TIME_ZONE,
+    80
+  );
+
+  if (!/^[A-Z]{3}$/.test(currency)) {
+    throw new Error('TRAVEL_CRM_CURRENCY must be an ISO 4217 currency code.');
+  }
+  if (!/^[a-z]{2,3}(?:-[A-Z]{2})?$/.test(locale)) {
+    throw new Error('TRAVEL_CRM_LOCALE must look like en-GB or es-ES.');
+  }
+  if (
+    timeZone !== 'UTC' &&
+    !/^[A-Za-z0-9_+\-]+(?:\/[A-Za-z0-9_+\-]+)+$/.test(timeZone)
+  ) {
+    throw new Error('TRAVEL_CRM_TIME_ZONE must be an IANA time zone.');
+  }
+
+  otcRuntimeConfigCache_ = {
+    appName: appName || OTC.DEFAULTS.APP_NAME,
+    currency: currency,
+    locale: locale,
+    timeZone: timeZone
+  };
+  return otcRuntimeConfigCache_;
 }
 
 function getCrmSheet_(name) {
   const sheet = getCrmSpreadsheet_().getSheetByName(name);
   if (!sheet) throw new Error('Required sheet is missing: ' + name + '.');
+  if (!otcValidatedSheets_[name]) {
+    const headerKey = Object.keys(OTC.SHEETS).find(function(key) {
+      return OTC.SHEETS[key] === name;
+    });
+    if (headerKey && OTC.HEADERS[headerKey]) {
+      assertCompatibleHeaders_(sheet, OTC.HEADERS[headerKey]);
+    }
+    otcValidatedSheets_[name] = true;
+  }
   return sheet;
 }
 
@@ -95,8 +180,13 @@ function normalize_(value) {
 
 function money_(value) {
   if (typeof value === 'number') return value;
-  let text = cleanText_(value, 50).replace(/[€$\s]/g, '');
+  let text = cleanText_(value, 50)
+    .replace(/\s/g, '')
+    .replace(/[€$£¥]/g, '')
+    .replace(/^[A-Za-z]{3}/, '')
+    .replace(/[A-Za-z]{3}$/, '');
   if (!text) return NaN;
+  if (!/^[+-]?\d[\d,.]*$/.test(text)) return NaN;
   const comma = text.lastIndexOf(',');
   const dot = text.lastIndexOf('.');
   if (comma >= 0 && dot >= 0) {
@@ -126,12 +216,21 @@ function dateFromInput_(value) {
   const year = Number(iso ? iso[1] : local[3]);
   const month = Number(iso ? iso[2] : local[2]);
   const day = Number(iso ? iso[3] : local[1]);
-  const date = new Date(year, month - 1, day);
+  const normalized = [
+    String(year).padStart(4, '0'),
+    String(month).padStart(2, '0'),
+    String(day).padStart(2, '0')
+  ].join('-');
+  const timeZone = getRuntimeConfig_().timeZone;
+  let date;
+  try {
+    date = Utilities.parseDate(normalized, timeZone, 'yyyy-MM-dd');
+  } catch (error) {
+    throw new Error('Invalid date: ' + text + '.');
+  }
   if (
     isNaN(date.getTime()) ||
-    date.getFullYear() !== year ||
-    date.getMonth() !== month - 1 ||
-    date.getDate() !== day
+    Utilities.formatDate(date, timeZone, 'yyyy-MM-dd') !== normalized
   ) throw new Error('Invalid date: ' + text + '.');
   return date;
 }
@@ -140,24 +239,30 @@ function dateToIso_(value) {
   if (!value) return '';
   const date = value instanceof Date ? value : dateFromInput_(value);
   if (!date) return '';
-  return Utilities.formatDate(date, OTC.TIME_ZONE, 'yyyy-MM-dd');
+  return Utilities.formatDate(date, getRuntimeConfig_().timeZone, 'yyyy-MM-dd');
 }
 
 function nowIso_() {
-  return Utilities.formatDate(new Date(), OTC.TIME_ZONE, "yyyy-MM-dd'T'HH:mm:ss");
+  return Utilities.formatDate(
+    new Date(),
+    getRuntimeConfig_().timeZone,
+    "yyyy-MM-dd'T'HH:mm:ss"
+  );
 }
 
 function firstFreeRow_(sheet, idColumn) {
   const column = idColumn || 1;
+  const lastRow = Math.max(sheet.getLastRow(), 1);
   const maxRows = sheet.getMaxRows();
-  if (maxRows <= 1) {
-    sheet.insertRowAfter(1);
+  if (lastRow <= 1) {
+    if (maxRows <= 1) sheet.insertRowAfter(1);
     return 2;
   }
-  const values = sheet.getRange(2, column, maxRows - 1, 1).getDisplayValues();
+  const values = sheet.getRange(2, column, lastRow - 1, 1).getDisplayValues();
   for (let index = 0; index < values.length; index++) {
     if (!cleanText_(values[index][0], 200)) return index + 2;
   }
+  if (lastRow < maxRows) return lastRow + 1;
   sheet.insertRowAfter(maxRows);
   return maxRows + 1;
 }
@@ -174,7 +279,7 @@ function findRowById_(sheet, column, id) {
 
 function withCrmLock_(operation) {
   const lock = LockService.getScriptLock();
-  lock.waitLock(20000);
+  lock.waitLock(OTC.LIMITS.LOCK_TIMEOUT_MS);
   try {
     return operation();
   } finally {

@@ -3,171 +3,205 @@
 
   # Open Travel CRM for Google Sheets
 
-  **A secure, lightweight CRM for travel agencies—built with Google Sheets and Google Apps Script.**
+  **A secure, self-hosted CRM for travel agencies that runs on Google Sheets and Apps Script.**
 
-  [Live demo](https://soroushkarahrodi79-oss.github.io/travel-agency-crm-google-sheets/) ·
-  [Installation](docs/DEPLOYMENT.md) ·
-  [Architecture](docs/ARCHITECTURE.md) ·
-  [Security](SECURITY.md) ·
+  Own the data. Keep the workflow simple. Deploy without a database server.
+
+  [Try the interactive demo](https://soroushkarahrodi79-oss.github.io/travel-agency-crm-google-sheets/) ·
+  [Deploy the CRM](docs/DEPLOYMENT.md) ·
+  [Read the architecture](docs/ARCHITECTURE.md) ·
   [Español](README.es.md)
 
   [![CI](https://github.com/soroushkarahrodi79-oss/travel-agency-crm-google-sheets/actions/workflows/ci.yml/badge.svg)](https://github.com/soroushkarahrodi79-oss/travel-agency-crm-google-sheets/actions/workflows/ci.yml)
-  [![License: MIT](https://img.shields.io/badge/License-MIT-f28c28.svg)](LICENSE)
-  [![Google Apps Script](https://img.shields.io/badge/Google%20Apps%20Script-V8-4285F4?logo=google)](https://developers.google.com/apps-script)
-  [![Google Sheets](https://img.shields.io/badge/Google%20Sheets-CRM-34A853?logo=googlesheets&logoColor=white)](https://www.google.com/sheets/about/)
+  [![Release](https://img.shields.io/badge/release-v1.1.0-2667e8.svg)](CHANGELOG.md)
+  [![License: MIT](https://img.shields.io/badge/license-MIT-f28c28.svg)](LICENSE)
+  [![Runtime dependencies](https://img.shields.io/badge/runtime_dependencies-0-15805d.svg)](package.json)
   [![PRs welcome](https://img.shields.io/badge/PRs-welcome-1f6feb.svg)](CONTRIBUTING.md)
 </div>
 
-## Why this project?
+## The problem it solves
 
-Most small travel agencies start in spreadsheets, then outgrow them before a
-full SaaS CRM is financially or operationally justified. Open Travel CRM keeps
-the familiar Google Sheets data layer while adding a focused, responsive web
-application and server-side access controls.
+Small travel teams often live between two uncomfortable choices: an
+unstructured spreadsheet or a SaaS CRM that is too expensive, too generic, or
+too difficult to customize. Open Travel CRM keeps Google Sheets as the
+transparent data layer and adds a focused web application with server-side
+authorization, payment controls and an audit trail.
 
-It is intentionally:
+It is designed to be:
 
-- **deployable in minutes** with Google Apps Script;
-- **auditable** because every critical payment action is recorded;
-- **portable** because the database remains a spreadsheet you own;
-- **dependency-free at runtime**—no database server or frontend build;
-- **safe to fork**—the repository contains no real customers or credentials.
+- **easy to own** — the agency controls the spreadsheet, Apps Script project and deployment;
+- **safe to fork** — no customer records, deployment IDs or credentials are committed;
+- **operationally simple** — no database server, frontend build or runtime package installation;
+- **configurable** — brand name, currency, locale and time zone are deployment settings;
+- **auditable** — payments are cancelled rather than deleted, and sensitive mutations are logged;
+- **maintainable** — versioned schema checks, health diagnostics, CI and release consistency checks are included.
 
-## Features
+## What is included
 
-| Area | Included |
+| Capability | Details |
 | --- | --- |
-| Lead management | Search, create, edit, agent ownership, pipeline statuses |
-| Travel data | Destination, route, provider, locator, departure and return |
-| Sales | Budget, final sale amount, follow-up and next action |
-| Installments | Add/edit payments, paid/balance summary, overpayment guard |
-| Auditability | Cancel instead of delete, cancellation reason, audit log |
-| Security | Email OTP, signed sessions, role/ownership checks, ScriptLock |
-| UX | Responsive dashboard, accessible forms, mobile layout |
-| Operations | One-command tests, security scan, GitHub Actions |
+| Lead pipeline | Create, search, filter and assign leads across seven statuses |
+| Travel operations | Destination, provider, booking locator, route, travel dates and passengers |
+| Commercial tracking | Budget, final sale, follow-up date, next action and conversion metrics |
+| Installments | Add and edit payments, calculate balances and block overpayment |
+| Financial consistency | Prevent sale totals below collected payments; keep lead status aligned with balance |
+| Access control | Email OTP, signed opaque sessions, `ADMIN` and `AGENT` roles, owner isolation |
+| User administration | Invite, promote and disable users from the web app without sharing the spreadsheet |
+| Operations | Idempotent installer, schema compatibility guard, read-only health check and runbook |
+| UX | Responsive, keyboard-friendly UI with unsaved-change protection and configurable currency formatting |
 
-## Data model
+## Product preview
+
+The [static demo](https://soroushkarahrodi79-oss.github.io/travel-agency-crm-google-sheets/)
+contains fictional data and never connects to Google Sheets.
+
+<img src="docs/assets/dashboard-preview.svg" alt="Open Travel CRM dashboard preview" width="100%">
+
+## Architecture at a glance
 
 ```mermaid
-erDiagram
-  USERS ||--o{ LEADS : owns
-  LEADS ||--o| RESERVATIONS : has
-  LEADS ||--o{ PAYMENTS : receives
-  USERS ||--o{ AUDIT_LOG : creates
-
-  LEADS {
-    string lead_id PK
-    string agent_email FK
-    string status
-    number budget
-    number sale_amount
-  }
-  RESERVATIONS {
-    string lead_id FK
-    string provider
-    string booking_locator
-    string route
-  }
-  PAYMENTS {
-    string payment_id PK
-    string lead_id FK
-    number amount
-    string status
-  }
+flowchart LR
+  Browser["Responsive Apps Script Web App"] -->|"google.script.run"| API["Server services"]
+  API --> Auth["OTP, sessions, roles and ownership"]
+  API --> Domain["Leads, reservations, payments and users"]
+  Auth --> Props["Script Properties"]
+  Domain --> Sheets["Google Sheets"]
+  Domain --> Audit["Append-only audit trail"]
+  API --> Mail["Google Mail service"]
 ```
+
+The browser is always treated as untrusted. Role, owner, totals and payment
+state are resolved again on the server for every request. Read the
+[architecture](docs/ARCHITECTURE.md) and
+[threat model](docs/SECURITY_MODEL.md) for the full design.
 
 ## Quick start
 
-### 1. Create the spreadsheet
-
-Create a blank Google Sheet and copy its ID from the URL.
-
-### 2. Create the Apps Script project
+### 1. Fork or clone
 
 ```bash
-npm install -g @google/clasp
+git clone https://github.com/soroushkarahrodi79-oss/travel-agency-crm-google-sheets.git
+cd travel-agency-crm-google-sheets
+npm install
+npm run check
+```
+
+Node.js is used only for local quality checks. The deployed CRM has no npm
+runtime dependencies.
+
+### 2. Connect Apps Script
+
+Create a blank Google Sheet and a standalone Apps Script project, then:
+
+```bash
+npm install --global @google/clasp
 clasp login
 cp .clasp.json.example .clasp.json
 ```
 
-Create a standalone project at
-[`script.google.com`](https://script.google.com/), replace `YOUR_SCRIPT_ID` in
-the local `.clasp.json`, then run `clasp push`. The private `.clasp.json` is
-ignored by Git.
+Replace `YOUR_SCRIPT_ID` inside the private `.clasp.json`, then run:
 
-### 3. Initialize the CRM
+```bash
+clasp push
+```
 
-In Apps Script **Project Settings → Script Properties**, add:
+### 3. Configure and initialize
 
-| Property | Value |
+In **Apps Script → Project Settings → Script Properties**, add:
+
+| Property | Required value |
 | --- | --- |
-| `TRAVEL_CRM_SPREADSHEET_ID` | ID copied from the Google Sheet URL |
-| `TRAVEL_CRM_ADMIN_EMAIL` | Email for the first administrator |
+| `TRAVEL_CRM_SPREADSHEET_ID` | ID from the Google Sheet URL |
+| `TRAVEL_CRM_ADMIN_EMAIL` | Email of the first administrator |
 
-Then run `setupTravelCrm_()` from the Apps Script editor. The temporary admin
-email property is removed after a successful installation.
-
-The function creates all sheets, headers, formats, validations and the first
-administrator account.
+Run `setupTravelCrm_()` manually from the Apps Script editor. It creates the
+five data sheets, validates their headers, registers the administrator and
+records the schema version. The temporary admin-email property is removed.
 
 ### 4. Deploy
 
-Deploy as a Web App:
+Create a Web App deployment that executes as the deployment owner. Restrict
+access to the intended Google Workspace domain when possible. Registered users
+sign in with a one-time email code and do not need spreadsheet access.
 
-- **Execute as:** Me (the deployment owner)
-- **Who has access:** users with a Google account, or your Workspace domain
+Follow the complete [deployment guide](docs/DEPLOYMENT.md); it includes an
+acceptance test and production checklist.
 
-Agents sign in with a one-time code sent to an active email in the `USERS`
-sheet. They do not need direct access to the spreadsheet.
+## Configuration
 
-See the complete [deployment guide](docs/DEPLOYMENT.md) before using real data.
+Optional Script Properties let each fork customize the experience without
+editing source:
 
-## Screenshots
+| Property | Default |
+| --- | --- |
+| `TRAVEL_CRM_APP_NAME` | `Open Travel CRM` |
+| `TRAVEL_CRM_CURRENCY` | `EUR` |
+| `TRAVEL_CRM_LOCALE` | `en-GB` |
+| `TRAVEL_CRM_TIME_ZONE` | `Europe/Madrid` |
 
-The [interactive static demo](https://soroushkarahrodi79-oss.github.io/travel-agency-crm-google-sheets/)
-uses fictional records and never connects to a spreadsheet.
+See [configuration](docs/CONFIGURATION.md) for formats, examples and security
+guidance.
 
-<img src="docs/assets/dashboard-preview.svg" alt="Dashboard preview" width="100%">
-
-## Security promises
-
-- No real spreadsheet ID, Script ID, email, token or customer record is stored
-  in this repository.
-- Agent ownership is always enforced on the server.
-- Browser-supplied roles and owners are never trusted.
-- One-time codes expire in 10 minutes and signed sessions expire after 8 hours.
-- Session tokens are stored in browser session storage and never in the sheet.
-- Payments are cancelled, not physically deleted.
-- Concurrent writes use a script-level lock.
-- Deployment secrets live in Apps Script Properties.
-
-Read [SECURITY.md](SECURITY.md) and the
-[threat model](docs/SECURITY_MODEL.md) before production deployment.
-
-## Local quality checks
+## Quality and security
 
 ```bash
-npm test
+npm test             # syntax, contracts, domain helpers and service integration
+npm run docs:check   # local Markdown links
 npm run security:scan
+npm run release:check
+npm run check        # everything above
 ```
 
-The checks validate Apps Script syntax, browser JavaScript, required
-documentation, manifest scopes and common secret patterns.
+Important guarantees:
+
+- agents can read and mutate only their own leads;
+- browser-supplied roles, owners and totals are never trusted;
+- OTP issuance and verification are lock-protected and rate-limited;
+- sessions are HMAC-keyed, opaque, short-lived and invalidated when access changes;
+- payment movements remain auditable after cancellation;
+- spreadsheet formula injection is neutralized before writes;
+- installer functions and diagnostics cannot be called from the browser.
+
+This is a security-minded reference implementation, not a compliance
+certification. Never store complete payment-card data, passwords or identity
+documents in it. Read [SECURITY.md](SECURITY.md) before production use.
+
+## Documentation
+
+| Guide | Purpose |
+| --- | --- |
+| [Deployment](docs/DEPLOYMENT.md) | Install, authorize, deploy and accept the CRM |
+| [Configuration](docs/CONFIGURATION.md) | Brand, currency, locale, time zone and auth settings |
+| [Architecture](docs/ARCHITECTURE.md) | Components, trust boundaries and request flows |
+| [Data dictionary](docs/DATA_DICTIONARY.md) | Sheet-level schema and field meanings |
+| [Operations](docs/OPERATIONS.md) | Backups, user lifecycle, monitoring and incident response |
+| [Upgrading](docs/UPGRADING.md) | Safe code and schema upgrade procedure |
+| [Security model](docs/SECURITY_MODEL.md) | Threats, controls and known limits |
+
+Tagged versions are verified again and published through the
+[release workflow](.github/workflows/release.yml). A tag must exactly match the
+package version, for example `v1.1.0`.
 
 ## Project status
 
-Version `1.0.0` is a production-minded reference implementation. It is not a
-hosted service and does not provide regulatory compliance by itself.
+Version `1.1.0` is a production-minded reference implementation for small
+teams. Google Sheets and Apps Script have quotas and practical scale limits; the
+[operations guide](docs/OPERATIONS.md) explains when to consider a database-backed
+system.
 
-See the [roadmap](ROADMAP.md) for planned integrations and reporting.
+The [roadmap](ROADMAP.md) is intentionally outcome-driven. Security, data
+isolation and recoverability take priority over feature count.
 
-## Contributing
+## Contributing and support
 
-Issues, security reviews, documentation improvements and pull requests are
-welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md).
+Issues and focused pull requests are welcome. Start with
+[CONTRIBUTING.md](CONTRIBUTING.md), use fictional data in every example and run
+`npm run check` before submitting.
+
+For usage questions, bug reports and private security reporting, see
+[SUPPORT.md](SUPPORT.md).
 
 ## License
 
-Released under the [MIT License](LICENSE).
-
-Open Travel CRM is an independent project and is not affiliated with Google.
+Released under the [MIT License](LICENSE). Open Travel CRM is an independent
+project and is not affiliated with Google.

@@ -2,8 +2,15 @@ function savePayment(token, input) {
   const user = requireUser_(token, ['ADMIN', 'AGENT']);
   const data = input || {};
   const amount = money_(data.amount);
-  if (!Number.isFinite(amount) || amount <= 0) {
-    throw new Error('Payment amount must be greater than zero.');
+  if (
+    !Number.isFinite(amount) ||
+    amount <= 0 ||
+    amount > OTC.LIMITS.MAX_MONEY
+  ) {
+    throw new Error(
+      'Payment amount must be greater than zero and no more than ' +
+      OTC.LIMITS.MAX_MONEY + '.'
+    );
   }
   if (!data.paymentDate) throw new Error('Payment date is required.');
 
@@ -30,8 +37,13 @@ function savePayment(token, input) {
       if (payment.status !== 'ACTIVE' || payment.id === requestedId) return total;
       return total + payment.amount;
     }, 0);
-    const total = money_(lead.saleAmount || lead.budget);
-    if (Number.isFinite(total) && total > 0 && otherPaid + amount > total + 0.01) {
+    const total = leadTotal_(lead);
+    if (!Number.isFinite(total) || total <= 0) {
+      throw new Error(
+        'Set a sale amount or budget greater than zero before adding payments.'
+      );
+    }
+    if (otherPaid + amount > total + 0.01) {
       throw new Error('Payment would exceed the sale total.');
     }
 
@@ -62,6 +74,7 @@ function savePayment(token, input) {
       id,
       'Lead: ' + lead.id + '; amount: ' + roundMoney_(amount)
     );
+    syncLeadPaymentStatus_(lead.id, user);
     SpreadsheetApp.flush();
     return {ok: true, lead: getLeadForUser_(user, lead.id)};
   });
@@ -93,6 +106,7 @@ function cancelPayment(token, input) {
     sheet.getRange(rowNumber, 11).setValue(user.email);
     sheet.getRange(rowNumber, 12).setValue(cellText_(reason, 500));
     audit_(user, 'CANCEL_PAYMENT', 'PAYMENT', paymentId, reason);
+    syncLeadPaymentStatus_(lead.id, user);
     SpreadsheetApp.flush();
     return {ok: true, lead: getLeadForUser_(user, lead.id)};
   });
@@ -122,7 +136,7 @@ function listPayments_(leadId) {
 }
 
 function summarizePayments_(lead, payments) {
-  const total = money_(lead.saleAmount || lead.budget);
+  const total = leadTotal_(lead);
   const paid = (payments || []).reduce(function(sum, payment) {
     return sum + (payment.status === 'ACTIVE' ? payment.amount : 0);
   }, 0);
@@ -146,6 +160,55 @@ function getLeadForMutation_(user, leadId) {
 
 function nextPaymentId_() {
   return 'PAY-' +
-    Utilities.formatDate(new Date(), OTC.TIME_ZONE, 'yyyyMMdd-HHmmss') +
-    '-' + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+    Utilities.formatDate(
+      new Date(),
+      getRuntimeConfig_().timeZone,
+      'yyyyMMdd-HHmmss'
+    ) +
+    '-' + Utilities.getUuid().replace(/-/g, '').substring(0, 10).toUpperCase();
+}
+
+function leadTotal_(lead) {
+  const sale = money_(lead && lead.saleAmount);
+  if (
+    lead &&
+    lead.saleAmount !== '' &&
+    lead.saleAmount !== null &&
+    lead.saleAmount !== undefined &&
+    Number.isFinite(sale)
+  ) return sale;
+  const budget = money_(lead && lead.budget);
+  return Number.isFinite(budget) ? budget : NaN;
+}
+
+function syncLeadPaymentStatus_(leadId, user) {
+  const sheet = getCrmSheet_(OTC.SHEETS.LEADS);
+  const rowNumber = findRowById_(sheet, 1, leadId);
+  if (!rowNumber) return;
+  const row = sheet.getRange(
+    rowNumber, 1, 1, OTC.HEADERS.LEADS.length
+  ).getValues()[0];
+  const lead = mapLeadRow_(row);
+  const summary = summarizePayments_(lead, listPayments_(lead.id));
+  const current = cleanText_(row[6], 50);
+  let next = current;
+  if (
+    current === 'BOOKED_PENDING_PAYMENT' &&
+    summary.total > 0 &&
+    summary.balance <= 0.01
+  ) {
+    next = 'CLOSED_WON';
+  } else if (current === 'CLOSED_WON' && summary.balance > 0.01) {
+    next = 'BOOKED_PENDING_PAYMENT';
+  }
+  if (next === current) return;
+  sheet.getRange(rowNumber, 7).setValue(next);
+  sheet.getRange(rowNumber, 18).setValue(new Date());
+  audit_(
+    user,
+    'AUTO_UPDATE_STATUS',
+    'LEAD',
+    lead.id,
+    'Payment balance changed status from ' + current + ' to ' + next + '.'
+  );
 }

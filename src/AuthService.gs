@@ -11,45 +11,56 @@ function requestAccessCode(emailValue) {
   const user = findActiveUserByEmail_(email);
   if (!user) return generic;
 
-  const properties = PropertiesService.getScriptProperties();
-  const key = otpKey_(email);
-  const previousText = properties.getProperty(key);
-  if (previousText) {
-    try {
-      const previous = JSON.parse(previousText);
-      if (Date.now() - Number(previous.requestedAt || 0) < OTC.AUTH.RESEND_DELAY_MS) {
-        return generic;
-      }
-    } catch (error) {}
-  }
-  if (!consumeEmailQuota_(properties, email)) return generic;
+  const prepared = withCrmLock_(function() {
+    const properties = PropertiesService.getScriptProperties();
+    const key = otpKey_(email);
+    const previousText = properties.getProperty(key);
+    if (previousText) {
+      try {
+        const previous = JSON.parse(previousText);
+        if (
+          Date.now() - Number(previous.requestedAt || 0) <
+          OTC.AUTH.RESEND_DELAY_MS
+        ) return null;
+      } catch (error) {}
+    }
+    if (!consumeEmailQuota_(properties, email)) return null;
 
-  const code = generateOtp_();
-  properties.setProperty(key, JSON.stringify({
-    email: email,
-    codeSignature: signature_(email + ':' + code),
-    requestedAt: Date.now(),
-    expiresAt: Date.now() + OTC.AUTH.OTP_TTL_MS,
-    attempts: 0
-  }));
+    const code = generateOtp_();
+    properties.setProperty(key, JSON.stringify({
+      email: email,
+      codeSignature: signature_(email + ':' + code),
+      requestedAt: Date.now(),
+      expiresAt: Date.now() + OTC.AUTH.OTP_TTL_MS,
+      attempts: 0
+    }));
+    return {code: code, key: key};
+  });
+  if (!prepared) return generic;
 
   try {
     MailApp.sendEmail({
       to: email,
-      subject: 'Your Open Travel CRM access code',
-      name: 'Open Travel CRM',
+      subject: 'Your ' + getRuntimeConfig_().appName + ' access code',
+      name: getRuntimeConfig_().appName,
       htmlBody:
         '<div style="font-family:Arial,sans-serif;max-width:520px">' +
-        '<h2 style="color:#12385f">Open Travel CRM</h2>' +
+        '<h2 style="color:#12385f">' +
+        escapeHtml_(getRuntimeConfig_().appName) +
+        '</h2>' +
         '<p>Your one-time access code is:</p>' +
         '<div style="font-size:34px;font-weight:800;letter-spacing:8px;color:#12385f">' +
-        code +
+        prepared.code +
         '</div><p>This code expires in 10 minutes. If you did not request it, ignore this email.</p>' +
         '</div>'
     });
   } catch (error) {
-    properties.deleteProperty(key);
-    throw new Error('The access email could not be sent. Contact an administrator.');
+    PropertiesService.getScriptProperties().deleteProperty(prepared.key);
+    console.error(
+      'Access-code email delivery failed: ' +
+      cleanText_(error && error.message, 500)
+    );
+    return generic;
   }
   return generic;
 }
@@ -57,44 +68,52 @@ function requestAccessCode(emailValue) {
 function verifyAccessCode(emailValue, codeValue) {
   const email = cleanText_(emailValue, 200).toLowerCase();
   const code = cleanText_(codeValue, 20);
-  const properties = PropertiesService.getScriptProperties();
-  const key = otpKey_(email);
-  const stored = properties.getProperty(key);
-  if (!stored) throw new Error('The code is invalid or expired.');
+  const result = withCrmLock_(function() {
+    const properties = PropertiesService.getScriptProperties();
+    const key = otpKey_(email);
+    const stored = properties.getProperty(key);
+    if (!stored) throw new Error('The code is invalid or expired.');
 
-  let record;
-  try {
-    record = JSON.parse(stored);
-  } catch (error) {
-    properties.deleteProperty(key);
-    throw new Error('The code is invalid or expired.');
-  }
-  if (Number(record.expiresAt || 0) <= Date.now()) {
-    properties.deleteProperty(key);
-    throw new Error('The code has expired.');
-  }
-  record.attempts = Number(record.attempts || 0) + 1;
-  if (record.attempts > OTC.AUTH.MAX_ATTEMPTS) {
-    properties.deleteProperty(key);
-    throw new Error('Too many attempts. Request a new code.');
-  }
-  if (record.codeSignature !== signature_(email + ':' + code)) {
-    properties.setProperty(key, JSON.stringify(record));
-    throw new Error('The code is invalid or expired.');
-  }
+    let record;
+    try {
+      record = JSON.parse(stored);
+    } catch (error) {
+      properties.deleteProperty(key);
+      throw new Error('The code is invalid or expired.');
+    }
+    if (Number(record.expiresAt || 0) <= Date.now()) {
+      properties.deleteProperty(key);
+      throw new Error('The code has expired.');
+    }
+    record.attempts = Number(record.attempts || 0) + 1;
+    if (record.attempts > OTC.AUTH.MAX_ATTEMPTS) {
+      properties.deleteProperty(key);
+      throw new Error('Too many attempts. Request a new code.');
+    }
+    if (!safeSignatureEquals_(
+      record.codeSignature,
+      signature_(email + ':' + code)
+    )) {
+      properties.setProperty(key, JSON.stringify(record));
+      throw new Error('The code is invalid or expired.');
+    }
 
-  const user = findActiveUserByEmail_(email);
-  if (!user) {
+    const user = findActiveUserByEmail_(email);
+    if (!user) {
+      properties.deleteProperty(key);
+      throw new Error('The account is disabled or no longer registered.');
+    }
+    const token = Utilities.getUuid() + Utilities.getUuid();
+    properties.setProperty(sessionKey_(token), JSON.stringify({
+      email: user.email,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + OTC.AUTH.SESSION_TTL_MS
+    }));
     properties.deleteProperty(key);
-    throw new Error('The account is disabled or no longer registered.');
-  }
-  const token = Utilities.getUuid() + Utilities.getUuid();
-  properties.setProperty(sessionKey_(token), JSON.stringify({
-    email: user.email,
-    createdAt: Date.now(),
-    expiresAt: Date.now() + OTC.AUTH.SESSION_TTL_MS
-  }));
-  properties.deleteProperty(key);
+    return {token: token, user: user};
+  });
+  const token = result.token;
+  const user = result.user;
   audit_(user, 'SIGN_IN', 'SESSION', 'web', 'Successful OTP sign-in.');
   return {ok: true, token: token, user: publicUser_(user)};
 }
@@ -152,5 +171,28 @@ function cleanupExpiredAuth_() {
     } catch (error) {
       properties.deleteProperty(key);
     }
+  });
+}
+
+function safeSignatureEquals_(left, right) {
+  const first = String(left || '');
+  const second = String(right || '');
+  let difference = first.length ^ second.length;
+  const length = Math.max(first.length, second.length);
+  for (let index = 0; index < length; index++) {
+    difference |= (first.charCodeAt(index) || 0) ^ (second.charCodeAt(index) || 0);
+  }
+  return difference === 0;
+}
+
+function escapeHtml_(value) {
+  return cleanText_(value, 200).replace(/[&<>"']/g, function(character) {
+    return {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[character];
   });
 }
