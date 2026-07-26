@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {
   extractAcceptanceResult,
+  formatClaspDiagnostics,
   validateAcceptanceResult
 } from '../scripts/staging-check.mjs';
 
@@ -33,6 +34,17 @@ assert.throws(
     checks: [...healthy.checks.slice(0, 7), {name: 'broken', ok: false}]
   }, '1.2.0'),
   /failed/
+);
+assert.equal(
+  formatClaspDiagnostics(
+    {stdout: 'Calling with super-secret-token', stderr: 'API not deployed'},
+    ['super-secret-token']
+  ),
+  'Calling with [REDACTED]\nAPI not deployed'
+);
+assert.equal(
+  formatClaspDiagnostics({stdout: '', stderr: ''}),
+  '[clasp returned no output]'
 );
 
 console.log('✓ Staging responses are parsed and fail closed on unhealthy deployments.');
