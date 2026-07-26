@@ -648,6 +648,98 @@ assert.equal(
   true
 );
 
+// The balance report also runs against its own agent, so the expected money
+// totals cannot drift when fixtures elsewhere in this file change.
+plain(call('saveUser', adminSession.token, {
+  email: 'report@example.com',
+  displayName: 'Report Agent',
+  role: 'AGENT',
+  active: true
+}));
+call('requestAccessCode', 'report@example.com');
+const reportSession = plain(call(
+  'verifyAccessCode',
+  'report@example.com',
+  extractCode('report@example.com')
+));
+
+const reportLead = (name, travelStart, budget, status) => plain(call(
+  'saveLead',
+  adminSession.token,
+  {
+    name,
+    phone: '+34 600 000 800',
+    agentEmail: 'report@example.com',
+    source: 'WEB',
+    status: status || 'NEGOTIATION',
+    service: 'PACKAGE',
+    destination: 'Lima',
+    budget,
+    travelStart
+  }
+)).lead;
+
+const startedLead = reportLead('Report Departed', isoShift(queueToday, -2), '1000');
+const soonLead = reportLead('Report Soon', isoShift(queueToday, 3), '1000');
+reportLead('Report Later', isoShift(queueToday, 20), '1000');
+reportLead('Report Scheduled', isoShift(queueToday, 60), '1000');
+reportLead('Report Undated', '', '1000');
+// Excluded: fully collected, no longer collectible, and nothing agreed yet.
+const settledLead = reportLead('Report Settled', isoShift(queueToday, 10), '500');
+reportLead('Report Lost', isoShift(queueToday, 5), '1000', 'LOST');
+reportLead('Report No Total', isoShift(queueToday, 5), '');
+
+plain(call('savePayment', adminSession.token, {
+  leadId: settledLead.id,
+  paymentDate: queueToday,
+  amount: '500',
+  method: 'CASH'
+}));
+plain(call('savePayment', adminSession.token, {
+  leadId: soonLead.id,
+  paymentDate: queueToday,
+  amount: '400',
+  method: 'CARD'
+}));
+
+const report = plain(call('getOutstandingReport', reportSession.token));
+assert.equal(report.totals.leads, 5);
+assert.equal(report.totals.outstanding, 4600);
+assert.equal(report.totals.paid, 400);
+assert.deepEqual(
+  Object.keys(report.buckets).reduce((counts, name) => {
+    counts[name] = report.buckets[name].count;
+    return counts;
+  }, {}),
+  {OVERDUE: 1, DUE_SOON: 1, DUE_LATER: 1, SCHEDULED: 1, NO_TRAVEL_DATE: 1}
+);
+assert.equal(report.buckets.OVERDUE.outstanding, 1000);
+assert.equal(report.buckets.DUE_SOON.outstanding, 600);
+// A departure already under way outranks everything else.
+assert.equal(report.rows[0].id, startedLead.id);
+assert.equal(report.rows[0].bucket, 'OVERDUE');
+assert.equal(report.rows[0].daysToTravel, -2);
+assert.equal(report.rows[report.rows.length - 1].bucket, 'NO_TRAVEL_DATE');
+const soonRow = report.rows.find((row) => row.id === soonLead.id);
+assert.equal(soonRow.balance, 600);
+assert.equal(soonRow.paid, 400);
+assert.equal(soonRow.lastPaymentDate, queueToday);
+assert.equal(
+  report.rows.some((row) => row.id === settledLead.id),
+  false,
+  'A fully collected lead must not appear as outstanding.'
+);
+assert.equal(
+  report.rows.every((row) => row.agentEmail === 'report@example.com'),
+  true,
+  'The report must respect agent ownership.'
+);
+assert.equal(report.truncated, false);
+assert.throws(
+  () => call('getOutstandingReport', 'too-short'),
+  /session/
+);
+
 // Switching the deployment locale must translate what agents read without
 // touching the diagnostics operators and CI grep for.
 properties.TRAVEL_CRM_LOCALE = 'es-ES';
@@ -720,6 +812,7 @@ console.log('✓ Administrator and agent ownership boundaries are enforced.');
 console.log('✓ Payments, overpayment guards, cancellations and status sync are consistent.');
 console.log('✓ Access changes invalidate sessions and retain auditable history.');
 console.log('✓ Follow-up queue scopes, ordering and ownership are correct.');
+console.log('✓ Outstanding balances are aged, ranked, scoped and exclude settled leads.');
 console.log('✓ Locale switching translates agent errors and spares operator diagnostics.');
 console.log('✓ Operational health checks pass on a consistent installation.');
 console.log('✓ One-step setup can create and return a native spreadsheet.');

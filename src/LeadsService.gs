@@ -123,6 +123,110 @@ function getFollowUpQueue(token, scope) {
   };
 }
 
+/**
+ * Outstanding balance and payment aging report.
+ *
+ * Aging is anchored on the travel start date rather than on how old the debt
+ * is, because departure is the real collection deadline for an agency: money
+ * uncollected once the customer has travelled is the worst case, not merely
+ * the oldest one. Leads without a travel date are reported separately instead
+ * of being silently ranked as safe.
+ *
+ * Lost leads are excluded because they are no longer collectible, and leads
+ * with no agreed total are excluded because there is nothing to owe yet.
+ */
+function getOutstandingReport(token) {
+  const user = requireUser_(token, ['ADMIN', 'AGENT']);
+  const today = dateToIso_(new Date());
+  const aggregates = activePaymentAggregatesByLead_();
+  const buckets = {};
+  OTC.OPTIONS.AGING_BUCKETS.forEach(function(name) {
+    buckets[name] = {count: 0, outstanding: 0};
+  });
+  const rows = [];
+  let outstanding = 0;
+  let collected = 0;
+  let contracted = 0;
+
+  accessibleLeadRows_(user).forEach(function(row) {
+    const status = cleanText_(row[6], 50);
+    if (status === 'LOST') return;
+    const total = leadTotal_({
+      saleAmount: finiteOrBlank_(money_(row[10])),
+      budget: finiteOrBlank_(money_(row[9]))
+    });
+    if (!Number.isFinite(total)) return;
+    const id = cleanText_(row[0], 120);
+    const aggregate = aggregates[id] || {paid: 0, lastPaymentDate: ''};
+    const balance = roundMoney_(total - aggregate.paid);
+    if (balance <= 0) return;
+
+    const travelStart = dateToIso_(row[11]);
+    const daysToTravel = travelStart ? isoDayDelta_(today, travelStart) : null;
+    const bucket = agingBucket_(daysToTravel);
+    buckets[bucket].count++;
+    buckets[bucket].outstanding = roundMoney_(
+      buckets[bucket].outstanding + balance
+    );
+    outstanding = roundMoney_(outstanding + balance);
+    collected = roundMoney_(collected + aggregate.paid);
+    contracted = roundMoney_(contracted + total);
+    rows.push({
+      id: id,
+      name: cleanText_(row[2], 160),
+      phone: cleanText_(row[3], 60),
+      agentEmail: cleanText_(row[4], 200),
+      status: status,
+      destination: cleanText_(row[8], 120),
+      travelStart: travelStart,
+      daysToTravel: daysToTravel === null ? '' : daysToTravel,
+      total: roundMoney_(total),
+      paid: aggregate.paid,
+      balance: balance,
+      lastPaymentDate: aggregate.lastPaymentDate,
+      bucket: bucket
+    });
+  });
+
+  rows.sort(function(left, right) {
+    const byBucket = OTC.OPTIONS.AGING_BUCKETS.indexOf(left.bucket) -
+      OTC.OPTIONS.AGING_BUCKETS.indexOf(right.bucket);
+    if (byBucket !== 0) return byBucket;
+    if (left.travelStart !== right.travelStart) {
+      if (!left.travelStart) return 1;
+      if (!right.travelStart) return -1;
+      return left.travelStart < right.travelStart ? -1 : 1;
+    }
+    return right.balance - left.balance;
+  });
+
+  return {
+    today: today,
+    currency: getRuntimeConfig_().currency,
+    thresholds: {
+      soonDays: OTC.LIMITS.AGING_SOON_DAYS,
+      nearDays: OTC.LIMITS.AGING_NEAR_DAYS
+    },
+    totals: {
+      leads: rows.length,
+      contracted: contracted,
+      paid: collected,
+      outstanding: outstanding
+    },
+    buckets: buckets,
+    truncated: rows.length > OTC.LIMITS.MAX_REPORT_ROWS,
+    rows: rows.slice(0, OTC.LIMITS.MAX_REPORT_ROWS)
+  };
+}
+
+function agingBucket_(daysToTravel) {
+  if (daysToTravel === null) return 'NO_TRAVEL_DATE';
+  if (daysToTravel < 0) return 'OVERDUE';
+  if (daysToTravel <= OTC.LIMITS.AGING_SOON_DAYS) return 'DUE_SOON';
+  if (daysToTravel <= OTC.LIMITS.AGING_NEAR_DAYS) return 'DUE_LATER';
+  return 'SCHEDULED';
+}
+
 function getLead(token, leadId) {
   const user = requireUser_(token, ['ADMIN', 'AGENT']);
   return getLeadForUser_(user, leadId);
@@ -370,10 +474,15 @@ function listAssignableUsers_() {
     });
 }
 
-function activePaymentTotalsByLead_() {
+/**
+ * Single pass over PAYMENTS returning, per lead, the active amount collected
+ * and the most recent active payment date. Cancelled movements are ignored
+ * here but still retained in the sheet for the audit trail.
+ */
+function activePaymentAggregatesByLead_() {
   const sheet = getCrmSheet_(OTC.SHEETS.PAYMENTS);
-  const totals = {};
-  if (sheet.getLastRow() <= 1) return totals;
+  const aggregates = {};
+  if (sheet.getLastRow() <= 1) return aggregates;
   sheet.getRange(
     2, 1, sheet.getLastRow() - 1, OTC.HEADERS.PAYMENTS.length
   ).getValues().forEach(function(row) {
@@ -381,7 +490,22 @@ function activePaymentTotalsByLead_() {
     const leadId = cleanText_(row[1], 120);
     const amount = money_(row[3]);
     if (!leadId || !Number.isFinite(amount)) return;
-    totals[leadId] = roundMoney_(Number(totals[leadId] || 0) + amount);
+    const current = aggregates[leadId] || {paid: 0, lastPaymentDate: ''};
+    current.paid = roundMoney_(current.paid + amount);
+    const paymentDate = dateToIso_(row[2]);
+    if (paymentDate > current.lastPaymentDate) {
+      current.lastPaymentDate = paymentDate;
+    }
+    aggregates[leadId] = current;
+  });
+  return aggregates;
+}
+
+function activePaymentTotalsByLead_() {
+  const aggregates = activePaymentAggregatesByLead_();
+  const totals = {};
+  Object.keys(aggregates).forEach(function(leadId) {
+    totals[leadId] = aggregates[leadId].paid;
   });
   return totals;
 }

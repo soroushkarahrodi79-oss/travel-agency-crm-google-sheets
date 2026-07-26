@@ -199,6 +199,30 @@ const OTC_MESSAGES = Object.freeze({
     'Balance': 'Saldo',
     'Total': 'Total',
 
+    // Outstanding balance and aging report.
+    'Balances': 'Saldos',
+    'Outstanding balances': 'Saldos pendientes',
+    'Money still to collect, aged against each departure date.':
+      'Dinero pendiente de cobro, clasificado según la fecha de salida.',
+    'Leads with balance': 'Leads con saldo',
+    'Collected': 'Cobrado',
+    // Lower-case on purpose: it follows a count inside a summary tile.
+    'leads': 'leads',
+    'Travel already started': 'Viaje ya iniciado',
+    'Due within 7 days': 'Vence en 7 días',
+    'Due within 30 days': 'Vence en 30 días',
+    'Scheduled': 'Programado',
+    'No travel date': 'Sin fecha de viaje',
+    'Nothing outstanding. Every accessible lead is fully collected.':
+      'No hay saldos pendientes. Todos los leads accesibles están cobrados.',
+    'Download CSV': 'Descargar CSV',
+    'There is nothing to export yet.': 'Todavía no hay nada que exportar.',
+    'Lead ID': 'ID del lead',
+    'Phone': 'Teléfono',
+    'Days to travel': 'Días hasta el viaje',
+    'Last payment': 'Último pago',
+    'Aging bucket': 'Tramo de antigüedad',
+
     // User administration.
     'User access': 'Acceso de usuarios',
     'Invite, promote or disable CRM users without sharing the spreadsheet.':

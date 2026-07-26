@@ -63,8 +63,8 @@ const allSource = gsFiles
   .join('\n');
 for (const name of [
   'requestAccessCode', 'verifyAccessCode', 'signOut', 'getBootstrap',
-  'getDashboard', 'searchLeads', 'getFollowUpQueue', 'getLead', 'saveLead',
-  'savePayment', 'cancelPayment', 'listUsers', 'saveUser'
+  'getDashboard', 'searchLeads', 'getFollowUpQueue', 'getOutstandingReport',
+  'getLead', 'saveLead', 'savePayment', 'cancelPayment', 'listUsers', 'saveUser'
 ]) {
   check(
     new RegExp(`function\\s+${name}\\s*\\(`).test(allSource),
@@ -131,6 +131,14 @@ check(
     allSource.includes('function isoShift_(') &&
     allSource.includes('Invalid follow-up scope'),
   'follow-up queue is scope-validated and shares the dashboard date rules'
+);
+check(
+  allSource.includes('function agingBucket_(') &&
+    allSource.includes('AGING_BUCKETS') &&
+    allSource.includes('function isoDayDelta_(') &&
+    indexHtml.includes('function csvCell(') &&
+    indexHtml.includes("/^[=+\\-@\\t\\r]/"),
+  'balance report ages against departure and neutralises CSV formulas'
 );
 check(
   allSource.includes("function cellText_(") &&

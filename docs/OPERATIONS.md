@@ -25,6 +25,8 @@ Do not place secrets or customer data in a public issue.
 3. Review disabled or stale accounts in **Users**.
 4. Inspect unusual sign-ins, cancellations and role changes in `AUDIT_LOG`.
 5. Confirm backup jobs or manual copies succeeded.
+6. Clear the **Travel already started** bucket in **Balances**: a customer who
+   has departed with money still outstanding is the hardest case to collect.
 
 ### Monthly
 
@@ -34,6 +36,23 @@ Do not place secrets or customer data in a public issue.
 4. Pull upstream security and maintenance releases into the fork.
 5. Run `npm run check` against the deployed source version.
 6. Run the protected **Apps Script staging** workflow before production updates.
+
+## Outstanding balances
+
+**Balances** reports every accessible lead that still owes money, aged against
+its departure date rather than the age of the debt, because departure is the
+real collection deadline. Buckets run from **Travel already started** through
+**Due within 7 days**, **Due within 30 days**, **Scheduled** and **No travel
+date**; the last one is listed separately so undated work is chased rather than
+silently treated as safe.
+
+Lost leads are excluded because they are no longer collectible, and leads with
+no agreed budget or sale amount are excluded because nothing is owed yet.
+Agents see only their own leads; administrators see every agent's.
+
+**Download CSV** exports the current report. Cells beginning with `=`, `+`, `-`
+or `@` are prefixed with an apostrophe so a spreadsheet cannot execute exported
+text as a formula, matching the guard applied when writing to the sheet.
 
 ## User lifecycle
 
