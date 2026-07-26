@@ -1,31 +1,31 @@
 function requireUser_(token, allowedRoles) {
   const value = cleanText_(token, 200);
-  if (value.length < 50) throw new Error('Your session is missing or invalid.');
+  if (value.length < 50) throw new Error(t_('Your session is missing or invalid.'));
 
   const properties = PropertiesService.getScriptProperties();
   const key = sessionKey_(value);
   const stored = properties.getProperty(key);
-  if (!stored) throw new Error('Your session has expired. Sign in again.');
+  if (!stored) throw new Error(t_('Your session has expired. Sign in again.'));
 
   let session;
   try {
     session = JSON.parse(stored);
   } catch (error) {
     properties.deleteProperty(key);
-    throw new Error('Your session is invalid. Sign in again.');
+    throw new Error(t_('Your session is invalid. Sign in again.'));
   }
   if (!session.expiresAt || Number(session.expiresAt) <= Date.now()) {
     properties.deleteProperty(key);
-    throw new Error('Your session has expired. Sign in again.');
+    throw new Error(t_('Your session has expired. Sign in again.'));
   }
 
   const user = findActiveUserByEmail_(session.email);
   if (!user) {
     properties.deleteProperty(key);
-    throw new Error('Your CRM account is disabled or no longer registered.');
+    throw new Error(t_('Your CRM account is disabled or no longer registered.'));
   }
   if (allowedRoles && allowedRoles.indexOf(user.role) === -1) {
-    throw new Error('You do not have permission for this action.');
+    throw new Error(t_('You do not have permission for this action.'));
   }
 
   return user;
@@ -51,7 +51,7 @@ function findActiveUserByEmail_(emailValue) {
 function assertLeadAccess_(user, leadRow) {
   if (user.role === 'ADMIN') return;
   const owner = cleanText_(leadRow[4], 200).toLowerCase();
-  if (owner !== user.email) throw new Error('This lead belongs to another agent.');
+  if (owner !== user.email) throw new Error(t_('This lead belongs to another agent.'));
 }
 
 function audit_(user, action, entityType, entityId, details) {

@@ -26,6 +26,7 @@ const context = vm.createContext({
 
 for (const file of [
   'Config.gs',
+  'I18n.gs',
   'Security.gs',
   'AuthService.gs',
   'LeadsService.gs',
@@ -56,6 +57,19 @@ assert.equal(run('dateFromInput_("2026-12-31").getDate()'), 31);
 assert.equal(run('dateFromInput_("31/12/2026").getMonth()'), 11);
 throws('dateFromInput_("2026-02-31")', /Invalid date/);
 throws('dateFromInput_("12-31-2026")', /Invalid date/);
+
+assert.equal(run('messageLanguage_("es-ES")'), 'es');
+assert.equal(run('messageLanguage_("ES")'), 'es');
+assert.equal(run('messageLanguage_("en-GB")'), 'en');
+// An unsupported locale must degrade to English rather than throw.
+assert.equal(run('messageLanguage_("fr-FR")'), 'en');
+assert.equal(run('messageLanguage_("")'), 'en');
+assert.equal(run('messageLanguage_(null)'), 'en');
+// An untranslated string falls back to its English source, never to a key.
+assert.equal(
+  run('OTC_MESSAGES.es["Lead not found."]'),
+  'Lead no encontrado.'
+);
 
 assert.equal(run('isoShift_("2026-07-26", 7)'), '2026-08-02');
 assert.equal(run('isoShift_("2026-07-26", 0)'), '2026-07-26');

@@ -25,9 +25,9 @@ function saveUser(token, input) {
   const active = data.active !== false && normalize_(data.active) !== 'false';
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    throw new Error('Enter a valid user email.');
+    throw new Error(t_('Enter a valid user email.'));
   }
-  if (!displayName) throw new Error('Display name is required.');
+  if (!displayName) throw new Error(t_('Display name is required.'));
 
   return withCrmLock_(function() {
     const sheet = getCrmSheet_(OTC.SHEETS.USERS);
@@ -37,11 +37,11 @@ function saveUser(token, input) {
     ).getValues()[0] : null;
 
     if (email === actor.email && (!active || role !== 'ADMIN')) {
-      throw new Error('You cannot change your own administrator access.');
+      throw new Error(t_('You cannot change your own administrator access.'));
     }
     if (previous && isActiveAdminRow_(previous) && (role !== 'ADMIN' || !active)) {
       if (countActiveAdmins_(sheet) <= 1) {
-        throw new Error('The CRM must retain at least one active administrator.');
+        throw new Error(t_('The CRM must retain at least one active administrator.'));
       }
     }
 

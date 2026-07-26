@@ -55,7 +55,7 @@ function searchLeads(token, query, limit, filters) {
   const criteria = filters || {};
   const status = cleanText_(criteria.status, 50).toUpperCase();
   if (status && OTC.OPTIONS.STATUSES.indexOf(status) === -1) {
-    throw new Error('Invalid status filter.');
+    throw new Error(t_('Invalid status filter.'));
   }
   return accessibleLeadRows_(user)
     .filter(function(row) {
@@ -87,7 +87,7 @@ function getFollowUpQueue(token, scope) {
   const user = requireUser_(token, ['ADMIN', 'AGENT']);
   const requested = cleanText_(scope, 20).toUpperCase() || 'OVERDUE';
   if (OTC.OPTIONS.FOLLOW_UP_SCOPES.indexOf(requested) === -1) {
-    throw new Error('Invalid follow-up scope.');
+    throw new Error(t_('Invalid follow-up scope.'));
   }
   const today = dateToIso_(new Date());
   const horizon = isoShift_(today, OTC.LIMITS.FOLLOW_UP_WINDOW_DAYS);
@@ -131,7 +131,7 @@ function getLead(token, leadId) {
 function getLeadForUser_(user, leadId) {
   const leads = getCrmSheet_(OTC.SHEETS.LEADS);
   const rowNumber = findRowById_(leads, 1, leadId);
-  if (!rowNumber) throw new Error('Lead not found.');
+  if (!rowNumber) throw new Error(t_('Lead not found.'));
   const row = leads.getRange(rowNumber, 1, 1, OTC.HEADERS.LEADS.length).getValues()[0];
   assertLeadAccess_(user, row);
   const lead = mapLeadRow_(row);
@@ -179,7 +179,7 @@ function saveLead(token, input) {
       : 0;
     const total = leadTotal_({saleAmount: saleAmount, budget: budget});
     if (activePaid > 0 && !Number.isFinite(total)) {
-      throw new Error('A sale total is required while active payments exist.');
+      throw new Error(t_('A sale total is required while active payments exist.'));
     }
     if (Number.isFinite(total) && activePaid > total + 0.01) {
       throw new Error(
@@ -273,13 +273,13 @@ function mapLeadRow_(row) {
 }
 
 function validateLeadInput_(data) {
-  if (!cleanText_(data.name, 160)) throw new Error('Name is required.');
+  if (!cleanText_(data.name, 160)) throw new Error(t_('Name is required.'));
   if (cleanText_(data.phone, 60).replace(/\D/g, '').length < 7) {
-    throw new Error('Phone must contain at least seven digits.');
+    throw new Error(t_('Phone must contain at least seven digits.'));
   }
   if (data.travelStart && data.travelEnd) {
     if (dateFromInput_(data.travelEnd).getTime() < dateFromInput_(data.travelStart).getTime()) {
-      throw new Error('Travel end cannot be earlier than travel start.');
+      throw new Error(t_('Travel end cannot be earlier than travel start.'));
     }
   }
 }
@@ -289,7 +289,7 @@ function resolveOwnerEmail_(user, requestedEmail) {
   const email = cleanText_(requestedEmail, 200).toLowerCase() || user.email;
   const selected = findActiveUserByEmail_(email);
   if (!selected) {
-    throw new Error('Selected owner is disabled or not registered in USERS.');
+    throw new Error(t_('Selected owner is disabled or not registered in USERS.'));
   }
   return selected.email;
 }

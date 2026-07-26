@@ -23,7 +23,7 @@ isolation, recovery and low operating complexity take priority.
 - [ ] Reusable quote and customer-email templates
 - [ ] Calendar follow-up events with idempotent sync
 - [ ] Drive folders and document links per lead
-- [ ] Full UI localization, starting with Spanish and English
+- [x] Full UI localization, starting with Spanish and English
 
 ## Next: confidence at scale
 

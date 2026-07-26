@@ -25,6 +25,26 @@ Currency and locale are used by the browser's `Intl.NumberFormat`. The time
 zone is used for IDs, dates and timestamps and is also applied to the
 spreadsheet during setup.
 
+## Interface language
+
+`TRAVEL_CRM_LOCALE` also selects the interface language. Its first two letters
+are matched against the catalogues in `src/I18n.gs`; anything without a
+catalogue falls back to English, so `es-ES`, `es-CO` and `es-MX` all render
+Spanish while `fr-FR` renders English rather than failing.
+
+Translation covers the Web App and the errors agents read. Two categories stay
+in English on purpose:
+
+- **Operator diagnostics** — the installer, schema guard, staging acceptance
+  and `TRAVEL_CRM_*` validation messages, so deployment logs, CI output and
+  runbooks keep one greppable wording across every deployment.
+- **Spreadsheet contents** — sheet names, headers and stored values are data,
+  not interface, and renaming them would break the schema guard.
+
+To add a language, add a catalogue keyed by its two-letter code to
+`OTC_MESSAGES`. `npm test` fails if any user-facing string lacks a Spanish
+translation, so the catalogue cannot silently fall behind the interface.
+
 Choose the production time zone before entering real records. After changing a
 setting, reload the Web App. A time-zone change on an existing installation can
 alter how historical dates are interpreted: back up the sheet, test against a

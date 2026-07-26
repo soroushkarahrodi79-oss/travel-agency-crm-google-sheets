@@ -221,7 +221,7 @@ function money_(value) {
 
 function dateFromInput_(value) {
   if (value instanceof Date) {
-    if (isNaN(value.getTime())) throw new Error('Invalid date.');
+    if (isNaN(value.getTime())) throw new Error(t_('Invalid date.'));
     return new Date(value.getTime());
   }
   const text = cleanText_(value, 30);
