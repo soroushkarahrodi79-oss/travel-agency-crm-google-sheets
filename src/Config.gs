@@ -3,7 +3,7 @@
  * Deployment-specific values live in Apps Script Properties.
  */
 const OTC = Object.freeze({
-  VERSION: '1.1.0',
+  VERSION: '1.2.0',
   SCHEMA_VERSION: 1,
   PROPERTY_SPREADSHEET_ID: 'TRAVEL_CRM_SPREADSHEET_ID',
   PROPERTY_ADMIN_EMAIL: 'TRAVEL_CRM_ADMIN_EMAIL',
@@ -12,6 +12,8 @@ const OTC = Object.freeze({
     CURRENCY: 'TRAVEL_CRM_CURRENCY',
     LOCALE: 'TRAVEL_CRM_LOCALE',
     TIME_ZONE: 'TRAVEL_CRM_TIME_ZONE',
+    ENVIRONMENT: 'TRAVEL_CRM_ENVIRONMENT',
+    STAGING_TOKEN: 'TRAVEL_CRM_STAGING_TOKEN',
     SCHEMA_VERSION: 'TRAVEL_CRM_SCHEMA_VERSION',
     INSTALL_ID: 'TRAVEL_CRM_INSTALL_ID'
   }),
@@ -19,7 +21,8 @@ const OTC = Object.freeze({
     APP_NAME: 'Open Travel CRM',
     CURRENCY: 'EUR',
     LOCALE: 'en-GB',
-    TIME_ZONE: 'Europe/Madrid'
+    TIME_ZONE: 'Europe/Madrid',
+    ENVIRONMENT: 'production'
   }),
   LIMITS: Object.freeze({
     MAX_MONEY: 1000000000,
@@ -121,6 +124,11 @@ function getRuntimeConfig_() {
     properties.getProperty(OTC.PROPERTIES.TIME_ZONE) || OTC.DEFAULTS.TIME_ZONE,
     80
   );
+  const environment = cleanText_(
+    properties.getProperty(OTC.PROPERTIES.ENVIRONMENT) ||
+      OTC.DEFAULTS.ENVIRONMENT,
+    20
+  ).toLowerCase();
 
   if (!/^[A-Z]{3}$/.test(currency)) {
     throw new Error('TRAVEL_CRM_CURRENCY must be an ISO 4217 currency code.');
@@ -134,12 +142,18 @@ function getRuntimeConfig_() {
   ) {
     throw new Error('TRAVEL_CRM_TIME_ZONE must be an IANA time zone.');
   }
+  if (['production', 'staging', 'demo'].indexOf(environment) === -1) {
+    throw new Error(
+      'TRAVEL_CRM_ENVIRONMENT must be production, staging or demo.'
+    );
+  }
 
   otcRuntimeConfigCache_ = {
     appName: appName || OTC.DEFAULTS.APP_NAME,
     currency: currency,
     locale: locale,
-    timeZone: timeZone
+    timeZone: timeZone,
+    environment: environment
   };
   return otcRuntimeConfigCache_;
 }

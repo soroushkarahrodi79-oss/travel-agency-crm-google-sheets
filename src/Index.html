@@ -22,6 +22,7 @@
     .brand{display:flex;align-items:center;gap:12px;margin:0 8px 32px}
     .brand-mark{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:var(--orange);font-weight:900}
     .brand strong,.brand small{display:block}.brand small{opacity:.7;margin-top:2px}
+    .environment{display:inline-flex;margin-top:7px;padding:4px 8px;border-radius:999px;background:#fff2cc;color:#7a4b00;font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
     nav{display:grid;gap:8px}
     nav button{border:0;background:transparent;color:#d9e8f6;text-align:left;padding:12px 14px;border-radius:12px;font-weight:700}
     nav button:hover,nav button.active{background:rgba(255,255,255,.12);color:#fff}
@@ -102,11 +103,12 @@
         <button id="changeEmail" class="btn btn-secondary" type="button">Use another email</button>
       </form>
       <p class="auth-hint">Codes expire after 10 minutes. Access is limited to active users in the USERS sheet.</p>
+      <span id="authEnvironment" class="environment" hidden><?= environment ?></span>
     </article>
   </section>
   <div id="crmShell" class="shell" hidden>
     <aside>
-      <div class="brand"><div class="brand-mark">OT</div><div><strong id="brandName"><?= appName ?></strong><small>Google Sheets edition</small></div></div>
+      <div class="brand"><div class="brand-mark">OT</div><div><strong id="brandName"><?= appName ?></strong><small>Google Sheets edition</small><span id="environmentLabel" class="environment" hidden></span></div></div>
       <nav aria-label="Main navigation">
         <button class="active" data-view="dashboard">Dashboard</button>
         <button data-view="leads">Leads</button>
@@ -175,6 +177,7 @@
   </dialog>
 
   <script>
+    var deployedEnvironment='<?= environment ?>';
     var state={bootstrap:null,current:null,users:[],dirty:false,token:sessionStorage.getItem('otc_token')||'',email:'',messageTimer:null};
     document.addEventListener('DOMContentLoaded',start);
     document.addEventListener('click',function(event){
@@ -194,6 +197,7 @@
     window.addEventListener('beforeunload',function(event){if(state.dirty){event.preventDefault();event.returnValue='';}});
 
     async function start(){
+      setEnvironmentLabels(deployedEnvironment);
       document.getElementById('emailForm').addEventListener('submit',requestCodeUi);
       document.getElementById('codeForm').addEventListener('submit',verifyCodeUi);
       document.getElementById('changeEmail').addEventListener('click',resetLogin);
@@ -216,6 +220,7 @@
         document.title=configuration.appName||'Open Travel CRM';
         setText('authBrand',configuration.appName||'Open Travel CRM');
         setText('brandName',configuration.appName||'Open Travel CRM');
+        setEnvironmentLabels(configuration.environment);
         document.getElementById('userName').textContent=state.bootstrap.user.displayName;
         document.getElementById('userRole').textContent=state.bootstrap.user.role+' · v'+state.bootstrap.version;
         document.getElementById('usersNav').hidden=!state.bootstrap.capabilities.manageUsers;
@@ -231,6 +236,15 @@
         showLogin();
         showMessage(errorText(error),true);
       }
+    }
+
+    function setEnvironmentLabels(value){
+      var environment=value||'production';
+      ['authEnvironment','environmentLabel'].forEach(function(id){
+        var element=document.getElementById(id);
+        element.hidden=environment==='production';
+        element.textContent=environment;
+      });
     }
 
     async function requestCodeUi(event){

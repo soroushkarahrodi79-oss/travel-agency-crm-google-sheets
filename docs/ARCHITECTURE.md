@@ -187,6 +187,12 @@ The repository runs three complementary test layers without production data:
 A disposable Apps Script deployment remains the recommended final acceptance
 environment before a production release.
 
+The manually approved `Apps Script staging` workflow makes that acceptance
+repeatable. Its protected GitHub environment supplies the ignored project
+binding, OAuth credentials and an installation-specific token. The remote
+entry point fails closed unless the target declares itself as `staging`;
+production never accepts remote health requests.
+
 ## Extension rules
 
 Good integrations include quote emails, calendar follow-ups, Drive folders,

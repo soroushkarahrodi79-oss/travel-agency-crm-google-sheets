@@ -1,7 +1,11 @@
 /**
- * Creates the five required sheets and the first administrator.
- * Set TRAVEL_CRM_SPREADSHEET_ID and TRAVEL_CRM_ADMIN_EMAIL in Script
- * Properties, then run this function manually from the Apps Script editor.
+ * Creates or connects the native Google Sheets data store, provisions the
+ * schema and registers the first administrator.
+ *
+ * For the shortest install, run this once without properties: the installer
+ * creates an agency-owned spreadsheet and uses the executing Google account as
+ * administrator. Existing installations can keep supplying spreadsheet/admin
+ * properties explicitly.
  */
 function setupTravelCrm_() {
   const properties = PropertiesService.getScriptProperties();
@@ -20,32 +24,56 @@ function setupTravelCrm_() {
       '. Deploy a compatible or newer code version; setup will not downgrade it.'
     );
   }
-  const id = cleanText_(
+  let id = cleanText_(
     properties.getProperty(OTC.PROPERTY_SPREADSHEET_ID),
     160
   );
-  if (!/^[A-Za-z0-9_-]{20,}$/.test(id)) {
-    throw new Error(
-      'Set a valid TRAVEL_CRM_SPREADSHEET_ID in Script Properties.'
-    );
-  }
-
-  const spreadsheet = SpreadsheetApp.openById(id);
-  const existingUsers = spreadsheet.getSheetByName(OTC.SHEETS.USERS);
-  let email = cleanText_(
+  const runtime = getRuntimeConfig_();
+  const configuredAdminEmail = cleanText_(
     properties.getProperty(OTC.PROPERTY_ADMIN_EMAIL),
     200
   ).toLowerCase();
+  const executingEmail = typeof Session === 'undefined'
+    ? ''
+    : cleanText_(Session.getEffectiveUser().getEmail(), 200).toLowerCase();
+  if (
+    !id &&
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(configuredAdminEmail) &&
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(executingEmail)
+  ) {
+    throw new Error(
+      'The executing account email is unavailable. Set a valid ' +
+      'TRAVEL_CRM_ADMIN_EMAIL before creating the spreadsheet.'
+    );
+  }
+  let spreadsheet;
+  let createdSpreadsheet = false;
+  if (!id) {
+    spreadsheet = SpreadsheetApp.create(runtime.appName + ' Data');
+    id = spreadsheet.getId();
+    properties.setProperty(OTC.PROPERTY_SPREADSHEET_ID, id);
+    createdSpreadsheet = true;
+  } else if (!/^[A-Za-z0-9_-]{20,}$/.test(id)) {
+    throw new Error(
+      'Set a valid TRAVEL_CRM_SPREADSHEET_ID in Script Properties.'
+    );
+  } else {
+    spreadsheet = SpreadsheetApp.openById(id);
+  }
+
+  const existingUsers = spreadsheet.getSheetByName(OTC.SHEETS.USERS);
+  let email = configuredAdminEmail;
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     email = existingUsers ? existingAdminEmail_(existingUsers) : '';
   }
+  if (!email) email = executingEmail;
   if (!email) {
     throw new Error(
-      'Set a valid TRAVEL_CRM_ADMIN_EMAIL in Script Properties.'
+      'The executing account email is unavailable. Set a valid ' +
+      'TRAVEL_CRM_ADMIN_EMAIL in Script Properties and run setup again.'
     );
   }
   ensureAuthSecret_();
-  const runtime = getRuntimeConfig_();
 
   ensureSheet_(spreadsheet, OTC.SHEETS.LEADS, OTC.HEADERS.LEADS);
   ensureSheet_(spreadsheet, OTC.SHEETS.RESERVATIONS, OTC.HEADERS.RESERVATIONS);
@@ -74,10 +102,18 @@ function setupTravelCrm_() {
     version: OTC.VERSION,
     schemaVersion: OTC.SCHEMA_VERSION,
     spreadsheetName: spreadsheet.getName(),
+    spreadsheetId: id,
+    spreadsheetUrl: spreadsheet.getUrl(),
+    createdSpreadsheet: createdSpreadsheet,
     adminEmail: email,
     configuration: runtime,
     sheets: Object.keys(OTC.SHEETS).map(function(key) { return OTC.SHEETS[key]; }),
-    health: health
+    health: health,
+    nextSteps: [
+      'Open the spreadsheet and keep its sharing restricted.',
+      'Run runHealthCheck_() and require ok: true.',
+      'Deploy the project as a Web App that executes as you.'
+    ]
   };
 }
 
@@ -179,6 +215,11 @@ function applyListValidation_(range, values) {
  * Adds safe fictional data for screenshots and evaluation.
  */
 function seedDemoData_() {
+  if (getRuntimeConfig_().environment === 'production') {
+    throw new Error(
+      'Demo data is disabled in production. Use a dedicated demo environment.'
+    );
+  }
   const user = findActiveUserByEmail_(
     existingAdminEmail_(getCrmSheet_(OTC.SHEETS.USERS))
   );
@@ -210,6 +251,40 @@ function seedDemoData_() {
  */
 function runHealthCheck_() {
   return buildHealthReport_(getCrmSpreadsheet_());
+}
+
+/**
+ * Runs the read-only health report through the Apps Script Execution API.
+ * This intentionally remains unavailable outside a configured staging
+ * environment and requires an installation-specific secret.
+ */
+function runStagingAcceptance(stagingToken) {
+  const config = getRuntimeConfig_();
+  if (config.environment !== 'staging') {
+    throw new Error('Remote acceptance is available only in staging.');
+  }
+  const expected = cleanText_(
+    PropertiesService.getScriptProperties()
+      .getProperty(OTC.PROPERTIES.STAGING_TOKEN),
+    300
+  );
+  const provided = cleanText_(stagingToken, 300);
+  if (
+    expected.length < 32 ||
+    provided.length < 32 ||
+    !safeSignatureEquals_(signature_(expected), signature_(provided))
+  ) {
+    throw new Error('Invalid staging acceptance token.');
+  }
+  const report = runHealthCheck_();
+  return {
+    ok: report.ok,
+    environment: config.environment,
+    version: report.version,
+    schemaVersion: report.schemaVersion,
+    checkedAt: report.checkedAt,
+    checks: report.checks
+  };
 }
 
 function buildHealthReport_(spreadsheet) {
@@ -286,6 +361,13 @@ function buildHealthReport_(spreadsheet) {
     message:
       'Configured ' + configuredTimeZone + '; spreadsheet uses ' +
       spreadsheetTimeZone + '.'
+  });
+  checks.push({
+    name: 'configuration:environment',
+    ok: ['production', 'staging', 'demo'].indexOf(
+      getRuntimeConfig_().environment
+    ) >= 0,
+    message: 'Environment is ' + getRuntimeConfig_().environment + '.'
   });
 
   return {

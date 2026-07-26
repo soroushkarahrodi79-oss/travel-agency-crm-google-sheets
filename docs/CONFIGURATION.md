@@ -19,6 +19,7 @@ addresses or environment-specific branding.
 | `TRAVEL_CRM_CURRENCY` | `EUR` | Three-letter ISO 4217 code | `USD` |
 | `TRAVEL_CRM_LOCALE` | `en-GB` | Language or language-region | `es-ES` |
 | `TRAVEL_CRM_TIME_ZONE` | `Europe/Madrid` | IANA time zone or `UTC` | `America/Bogota` |
+| `TRAVEL_CRM_ENVIRONMENT` | `production` | `production`, `staging` or `demo` | `staging` |
 
 Currency and locale are used by the browser's `Intl.NumberFormat`. The time
 zone is used for IDs, dates and timestamps and is also applied to the
@@ -38,12 +39,17 @@ The installer and authentication service own these values:
 | `TRAVEL_CRM_AUTH_SECRET` | HMAC key for opaque OTP and session property keys |
 | `TRAVEL_CRM_SCHEMA_VERSION` | Installed data-schema version |
 | `TRAVEL_CRM_INSTALL_ID` | Non-secret identifier for this installation |
+| `TRAVEL_CRM_STAGING_TOKEN` | Secret for remote staging acceptance only |
 | `TRAVEL_CRM_OTP_*` | Short-lived signed OTP records |
 | `TRAVEL_CRM_SESSION_*` | Short-lived session records |
 | `TRAVEL_CRM_RATE_*` | Email-code quota windows |
 
 Do not edit or copy `TRAVEL_CRM_AUTH_SECRET` casually. Replacing it invalidates
 all current OTPs and sessions. Never commit Script Properties to the repository.
+
+Use a random `TRAVEL_CRM_STAGING_TOKEN` of at least 32 characters only when
+`TRAVEL_CRM_ENVIRONMENT=staging`. Non-production environments show a visible
+badge, and demo seeding is refused in production.
 
 ## Recommended regional examples
 

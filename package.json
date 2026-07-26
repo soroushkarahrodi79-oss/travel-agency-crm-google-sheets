@@ -1,6 +1,6 @@
 {
   "name": "travel-agency-crm-google-sheets",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "Open-source travel agency CRM built with Google Sheets and Apps Script",
   "keywords": [
@@ -19,11 +19,16 @@
     "url": "git+https://github.com/soroushkarahrodi79-oss/travel-agency-crm-google-sheets.git"
   },
   "scripts": {
-    "test": "node tests/static-check.mjs && node tests/unit-check.mjs && node tests/integration-check.mjs",
+    "test": "node tests/static-check.mjs && node tests/unit-check.mjs && node tests/integration-check.mjs && node tests/staging-check.mjs",
     "security:scan": "node scripts/security-scan.mjs",
     "docs:check": "node scripts/check-doc-links.mjs",
+    "media:check": "node scripts/media-check.mjs",
     "release:check": "node scripts/release-check.mjs",
-    "check": "npm test && npm run docs:check && npm run security:scan && npm run release:check"
+    "apps-script:configure": "node scripts/configure-clasp.mjs",
+    "apps-script:doctor": "node scripts/apps-script-doctor.mjs",
+    "apps-script:push": "npx --yes @google/clasp@3.3.0 push",
+    "staging:check": "node scripts/staging-check.mjs",
+    "check": "npm test && npm run docs:check && npm run media:check && npm run security:scan && npm run release:check"
   },
   "engines": {
     "node": ">=20"

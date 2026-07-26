@@ -13,7 +13,7 @@
   [Español](README.es.md)
 
   [![CI](https://github.com/soroushkarahrodi79-oss/travel-agency-crm-google-sheets/actions/workflows/ci.yml/badge.svg)](https://github.com/soroushkarahrodi79-oss/travel-agency-crm-google-sheets/actions/workflows/ci.yml)
-  [![Release](https://img.shields.io/badge/release-v1.1.0-2667e8.svg)](CHANGELOG.md)
+  [![Release](https://img.shields.io/badge/release-v1.2.0-2667e8.svg)](CHANGELOG.md)
   [![License: MIT](https://img.shields.io/badge/license-MIT-f28c28.svg)](LICENSE)
   [![Runtime dependencies](https://img.shields.io/badge/runtime_dependencies-0-15805d.svg)](package.json)
   [![PRs welcome](https://img.shields.io/badge/PRs-welcome-1f6feb.svg)](CONTRIBUTING.md)
@@ -47,7 +47,7 @@ It is designed to be:
 | Financial consistency | Prevent sale totals below collected payments; keep lead status aligned with balance |
 | Access control | Email OTP, signed opaque sessions, `ADMIN` and `AGENT` roles, owner isolation |
 | User administration | Invite, promote and disable users from the web app without sharing the spreadsheet |
-| Operations | Idempotent installer, schema compatibility guard, read-only health check and runbook |
+| Operations | One-step native Sheet installer, schema guard, health check and staging acceptance |
 | UX | Responsive, keyboard-friendly UI with unsaved-change protection and configurable currency formatting |
 
 ## Product preview
@@ -55,7 +55,10 @@ It is designed to be:
 The [static demo](https://soroushkarahrodi79-oss.github.io/travel-agency-crm-google-sheets/)
 contains fictional data and never connects to Google Sheets.
 
-<img src="docs/assets/dashboard-preview.svg" alt="Open Travel CRM dashboard preview" width="100%">
+<img src="docs/assets/screenshots/dashboard.jpg" alt="Open Travel CRM dashboard with fictional data" width="100%">
+
+[Watch the 12-second product tour](docs/assets/product-tour.mp4) or open the
+interactive demo to explore dashboard, leads, capture and user administration.
 
 ## Architecture at a glance
 
@@ -91,32 +94,31 @@ runtime dependencies.
 
 ### 2. Connect Apps Script
 
-Create a blank Google Sheet and a standalone Apps Script project, then:
+Create a standalone Apps Script project, then:
 
 ```bash
-npm install --global @google/clasp
 clasp login
-cp .clasp.json.example .clasp.json
+npm run apps-script:configure -- --script-id YOUR_SCRIPT_ID
+npm run apps-script:doctor
 ```
 
-Replace `YOUR_SCRIPT_ID` inside the private `.clasp.json`, then run:
-
-```bash
-clasp push
-```
+The project invokes a version-pinned `clasp` on demand; the generated
+`.clasp.json` is ignored. Run `npm run apps-script:push` to upload the source.
 
 ### 3. Configure and initialize
 
-In **Apps Script → Project Settings → Script Properties**, add:
+Run `setupTravelCrm_()` from the Apps Script editor. By default it creates a
+native Sheet in the executing account and uses that account as administrator.
+
+To connect an existing Sheet, or when the executing email is unavailable, add:
 
 | Property | Required value |
 | --- | --- |
 | `TRAVEL_CRM_SPREADSHEET_ID` | ID from the Google Sheet URL |
 | `TRAVEL_CRM_ADMIN_EMAIL` | Email of the first administrator |
 
-Run `setupTravelCrm_()` manually from the Apps Script editor. It creates the
-five data sheets, validates their headers, registers the administrator and
-records the schema version. The temporary admin-email property is removed.
+Run `setupTravelCrm_()` again. It returns the Sheet URL, creates the five tabs,
+validates their headers, registers the administrator and records the schema.
 
 ### 4. Deploy
 
@@ -147,9 +149,11 @@ guidance.
 ```bash
 npm test             # syntax, contracts, domain helpers and service integration
 npm run docs:check   # local Markdown links
+npm run media:check  # screenshots and optimized product-tour video
 npm run security:scan
 npm run release:check
 npm run check        # everything above
+npm run staging:check # remote acceptance on a configured staging project
 ```
 
 Important guarantees:
@@ -184,7 +188,7 @@ package version, for example `v1.1.0`.
 
 ## Project status
 
-Version `1.1.0` is a production-minded reference implementation for small
+Version `1.2.0` is a production-minded reference implementation for small
 teams. Google Sheets and Apps Script have quotas and practical scale limits; the
 [operations guide](docs/OPERATIONS.md) explains when to consider a database-backed
 system.

@@ -32,7 +32,7 @@ en producción.
 - Acceso mediante código temporal enviado al correo.
 - Gestión de usuarios desde la aplicación, sin compartir la hoja.
 - Marca, moneda, locale y zona horaria configurables por despliegue.
-- Instalador idempotente, esquema versionado, diagnóstico de salud y CI.
+- Instalador de un paso, esquema versionado, diagnóstico y staging verificable.
 
 ## Instalación rápida
 
@@ -41,25 +41,27 @@ git clone https://github.com/soroushkarahrodi79-oss/travel-agency-crm-google-she
 cd travel-agency-crm-google-sheets
 npm install
 npm run check
-npm install --global @google/clasp
 clasp login
-cp .clasp.json.example .clasp.json
+npm run apps-script:configure -- --script-id YOUR_SCRIPT_ID
+npm run apps-script:doctor
 ```
 
-1. Crea una hoja de Google vacía.
-2. Crea un proyecto independiente de Google Apps Script.
-3. Sustituye `YOUR_SCRIPT_ID` en `.clasp.json` y ejecuta `clasp push`.
-4. Añade estas propiedades de secuencia de comandos:
+1. Crea un proyecto independiente de Google Apps Script.
+2. Ejecuta `npm run apps-script:push`.
+3. Ejecuta `setupTravelCrm_()` desde el editor.
+4. El instalador crea una hoja nativa y usa tu cuenta como administrador.
+5. Para conectar una hoja existente, configura opcionalmente:
 
    - `TRAVEL_CRM_SPREADSHEET_ID`: ID de la hoja.
    - `TRAVEL_CRM_ADMIN_EMAIL`: correo del primer administrador.
 
-5. Ejecuta `setupTravelCrm_()` manualmente desde el editor.
 6. Despliega como Web App ejecutada por el propietario del despliegue.
 7. Haz la prueba de aceptación de la [guía de despliegue](docs/DEPLOYMENT.md).
 
 Los usuarios registrados reciben un código de un solo uso y no necesitan acceso
 directo a la hoja.
+
+[Ver el recorrido de producto de 12 segundos](docs/assets/product-tour.mp4).
 
 ## Personalización sin tocar el código
 
@@ -69,6 +71,7 @@ directo a la hoja.
 | `TRAVEL_CRM_CURRENCY` | `EUR` |
 | `TRAVEL_CRM_LOCALE` | `en-GB` |
 | `TRAVEL_CRM_TIME_ZONE` | `Europe/Madrid` |
+| `TRAVEL_CRM_ENVIRONMENT` | `production` |
 
 Consulta [Configuración](docs/CONFIGURATION.md) para ver formatos y ejemplos.
 
@@ -92,9 +95,11 @@ identidad. Lee [SECURITY.md](SECURITY.md) y el
 ```bash
 npm test
 npm run docs:check
+npm run media:check
 npm run security:scan
 npm run release:check
 npm run check
+npm run staging:check
 ```
 
 ## Documentación y comunidad

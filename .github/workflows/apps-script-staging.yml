@@ -1,0 +1,54 @@
+name: Apps Script staging
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: apps-script-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy-and-accept:
+    name: Deploy and accept staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install repository tooling
+        run: npm ci --ignore-scripts
+
+      - name: Run local quality gates
+        run: npm run check
+
+      - name: Configure private clasp files
+        env:
+          CLASP_CREDENTIALS_JSON: ${{ secrets.CLASP_CREDENTIALS_JSON }}
+          CLASP_SCRIPT_ID: ${{ secrets.CLASP_SCRIPT_ID }}
+        run: |
+          test -n "$CLASP_CREDENTIALS_JSON"
+          test -n "$CLASP_SCRIPT_ID"
+          printf '%s' "$CLASP_CREDENTIALS_JSON" > "$HOME/.clasprc.json"
+          chmod 600 "$HOME/.clasprc.json"
+          npm run apps-script:configure -- --script-id "$CLASP_SCRIPT_ID"
+
+      - name: Deploy source to staging
+        run: npm run apps-script:push -- --force
+
+      - name: Run remote acceptance
+        env:
+          TRAVEL_CRM_STAGING_TOKEN: ${{ secrets.TRAVEL_CRM_STAGING_TOKEN }}
+        run: npm run staging:check

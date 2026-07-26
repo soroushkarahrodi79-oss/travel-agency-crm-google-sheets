@@ -23,9 +23,12 @@ npm run check
 
 Do not continue with a failing check.
 
-## 2. Create the data store
+## 2. Choose the data-store path
 
-Create a blank Google Sheet. Copy the spreadsheet ID from the URL:
+Recommended: let `setupTravelCrm_()` create a native Google Sheet in your
+account. Leave `TRAVEL_CRM_SPREADSHEET_ID` unset and continue to step 3.
+
+To connect an existing blank Sheet, copy its ID from:
 
 ```text
 https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit
@@ -41,24 +44,18 @@ Create a standalone project at
 **Project Settings**.
 
 ```bash
-npm install --global @google/clasp
 clasp login
-cp .clasp.json.example .clasp.json
+npm run apps-script:configure -- --script-id YOUR_SCRIPT_ID
+npm run apps-script:doctor
 ```
 
-Replace `YOUR_SCRIPT_ID` in `.clasp.json`. The real file is ignored by Git.
-
-```json
-{
-  "scriptId": "YOUR_SCRIPT_ID",
-  "rootDir": "src"
-}
-```
+The repository invokes a version-pinned `clasp` on demand. The generated
+`.clasp.json` is private and ignored by Git.
 
 Push the source:
 
 ```bash
-clasp push
+npm run apps-script:push
 ```
 
 Alternatively, copy every `.gs`, `.html` and `appsscript.json` file under
@@ -66,11 +63,12 @@ Alternatively, copy every `.gs`, `.html` and `appsscript.json` file under
 
 ## 4. Configure the installation
 
-In **Apps Script → Project Settings → Script Properties**, add:
+For the one-step path, no required property is necessary when Apps Script can
+read the executing account email. Otherwise add:
 
 | Property | Value |
 | --- | --- |
-| `TRAVEL_CRM_SPREADSHEET_ID` | Spreadsheet ID from step 2 |
+| `TRAVEL_CRM_SPREADSHEET_ID` | Optional existing Spreadsheet ID from step 2 |
 | `TRAVEL_CRM_ADMIN_EMAIL` | Email of the first administrator |
 
 Optional brand and regional settings are documented in
@@ -83,6 +81,8 @@ requested Sheets and email-sending scopes.
 
 The installer:
 
+- creates a native Google Sheet when no spreadsheet is configured;
+- infers the executing account when no administrator email is configured;
 - validates the spreadsheet ID and administrator email;
 - creates `LEADS`, `RESERVATIONS`, `PAYMENTS`, `USERS` and `AUDIT_LOG`;
 - writes and verifies the expected headers;
@@ -92,7 +92,8 @@ The installer:
 - records the schema version;
 - deletes the temporary `TRAVEL_CRM_ADMIN_EMAIL` property.
 
-Run `runHealthCheck_()` from the editor. It verifies sheet headers, primary-key
+Copy the returned `spreadsheetUrl`. Run `runHealthCheck_()` from the editor. It
+verifies sheet headers, primary-key
 uniqueness, relationships, active administrators, schema version and time-zone
 alignment. Its returned object must have `ok: true`.
 
@@ -141,6 +142,30 @@ Use fictional data:
 - Keep the source version, deployment version and schema version recorded.
 
 Continue with the [operations runbook](OPERATIONS.md).
+
+## Automated staging acceptance
+
+Use a separate Apps Script project and Sheet. Configure:
+
+- `TRAVEL_CRM_ENVIRONMENT=staging`;
+- `TRAVEL_CRM_STAGING_TOKEN` with a random value of at least 32 characters;
+- the usual spreadsheet and administrator values when not using one-step setup.
+
+Deploy it once as an **API executable**, connect it to a standard Google Cloud
+project and enable the Apps Script API. The manifest restricts API execution to
+the deployment owner. Create a protected GitHub environment named `staging`
+with these secrets:
+
+- `CLASP_SCRIPT_ID`;
+- `CLASP_CREDENTIALS_JSON`;
+- `TRAVEL_CRM_STAGING_TOKEN`.
+
+Google documents the executable and Cloud-project prerequisites in
+[Execute functions with the Apps Script API](https://developers.google.com/apps-script/api/how-tos/execute).
+
+Run **Apps Script staging** from GitHub Actions. It repeats local checks, pushes
+the source and invokes the secret-gated `runStagingAcceptance`. A production
+installation rejects this endpoint even if a token is supplied.
 
 ## Updating an existing deployment
 

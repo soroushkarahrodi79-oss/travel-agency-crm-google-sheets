@@ -9,7 +9,9 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const properties = {
   TRAVEL_CRM_SPREADSHEET_ID: 'TEST_SPREADSHEET_ID_1234567890',
   TRAVEL_CRM_SCHEMA_VERSION: '1',
-  TRAVEL_CRM_AUTH_SECRET: 'integration-test-secret'
+  TRAVEL_CRM_AUTH_SECRET: 'integration-test-secret',
+  TRAVEL_CRM_ENVIRONMENT: 'staging',
+  TRAVEL_CRM_STAGING_TOKEN: 'integration-staging-token-1234567890'
 };
 const sentEmails = [];
 let uuidSequence = 0;
@@ -119,6 +121,30 @@ class MockRange {
     return this;
   }
 
+  setBackground() {
+    return this;
+  }
+
+  setFontColor() {
+    return this;
+  }
+
+  setFontWeight() {
+    return this;
+  }
+
+  setVerticalAlignment() {
+    return this;
+  }
+
+  insertCheckboxes() {
+    return this;
+  }
+
+  setDataValidation() {
+    return this;
+  }
+
   createTextFinder(target) {
     return new MockTextFinder(this, target);
   }
@@ -152,7 +178,12 @@ class MockSheet {
     return this.rows[0].length;
   }
 
+  getLastColumn() {
+    return this.getMaxColumns();
+  }
+
   getRange(row, column, numRows = 1, numColumns = 1) {
+    if (typeof row === 'string') return new MockRange(this, 1, 1);
     assert.equal(typeof row, 'number', 'Integration mock expects numeric ranges.');
     return new MockRange(this, row, column, numRows, numColumns);
   }
@@ -180,6 +211,30 @@ class MockSheet {
     this.maxRows++;
     return this;
   }
+
+  insertColumnsAfter() {
+    return this;
+  }
+
+  setFrozenRows() {
+    return this;
+  }
+
+  setHiddenGridlines() {
+    return this;
+  }
+
+  setRowHeight() {
+    return this;
+  }
+
+  autoResizeColumns() {
+    return this;
+  }
+
+  setColumnWidths() {
+    return this;
+  }
 }
 
 const sheets = {
@@ -192,9 +247,22 @@ const sheets = {
   AUDIT_LOG: new MockSheet('AUDIT_LOG', headers.AUDIT_LOG)
 };
 
+let spreadsheetTimeZone = 'Europe/Madrid';
 const spreadsheet = {
+  getId: () => 'CREATED_SPREADSHEET_ID_1234567890',
+  getName: () => 'Open Travel CRM Data',
+  getUrl: () =>
+    'https://docs.google.com/spreadsheets/d/CREATED_SPREADSHEET_ID_1234567890/edit',
   getSheetByName: (name) => sheets[name] || null,
-  getSpreadsheetTimeZone: () => 'Europe/Madrid'
+  getSpreadsheetTimeZone: () => spreadsheetTimeZone,
+  setSpreadsheetTimeZone: (value) => {
+    spreadsheetTimeZone = value;
+  },
+  insertSheet: (name) => {
+    const sheet = new MockSheet(name, []);
+    sheets[name] = sheet;
+    return sheet;
+  }
 };
 
 function dateParts(date, timeZone) {
@@ -250,12 +318,29 @@ const context = vm.createContext({
   PropertiesService: {
     getScriptProperties: () => scriptProperties
   },
+  Session: {
+    getEffectiveUser: () => ({
+      getEmail: () => 'admin@example.com'
+    })
+  },
   SpreadsheetApp: {
+    create: (name) => {
+      assert.equal(name, 'Open Travel CRM Data');
+      return spreadsheet;
+    },
     openById: (id) => {
       assert.equal(id, properties.TRAVEL_CRM_SPREADSHEET_ID);
       return spreadsheet;
     },
-    flush: () => {}
+    flush: () => {},
+    newDataValidation: () => {
+      const builder = {
+        requireValueInList: () => builder,
+        setAllowInvalid: () => builder,
+        build: () => ({type: 'list'})
+      };
+      return builder;
+    }
   },
   LockService: {
     getScriptLock: () => ({
@@ -334,6 +419,7 @@ assert.equal(adminSession.user.role, 'ADMIN');
 const bootstrap = plain(call('getBootstrap', adminSession.token));
 assert.equal(bootstrap.capabilities.manageUsers, true);
 assert.equal(bootstrap.configuration.currency, 'EUR');
+assert.equal(bootstrap.configuration.environment, 'staging');
 
 plain(call('saveUser', adminSession.token, {
   email: 'agent@example.com',
@@ -476,6 +562,24 @@ assert.throws(
 
 const health = plain(call('runHealthCheck_'));
 assert.equal(health.ok, true);
+const remoteAcceptance = plain(call(
+  'runStagingAcceptance',
+  properties.TRAVEL_CRM_STAGING_TOKEN
+));
+assert.equal(remoteAcceptance.ok, true);
+assert.equal(remoteAcceptance.environment, 'staging');
+assert.throws(
+  () => call('runStagingAcceptance', 'wrong-token-with-at-least-32-characters'),
+  /Invalid staging acceptance token/
+);
+delete properties.TRAVEL_CRM_SPREADSHEET_ID;
+const oneStepSetup = plain(call('setupTravelCrm_'));
+assert.equal(oneStepSetup.createdSpreadsheet, true);
+assert.match(oneStepSetup.spreadsheetUrl, /CREATED_SPREADSHEET_ID/);
+assert.equal(
+  properties.TRAVEL_CRM_SPREADSHEET_ID,
+  'CREATED_SPREADSHEET_ID_1234567890'
+);
 assert.equal(lockHeld, false);
 
 const auditActions = sheets.AUDIT_LOG.rows.slice(1).map((row) => row[2]);
@@ -496,3 +600,4 @@ console.log('✓ Administrator and agent ownership boundaries are enforced.');
 console.log('✓ Payments, overpayment guards, cancellations and status sync are consistent.');
 console.log('✓ Access changes invalidate sessions and retain auditable history.');
 console.log('✓ Operational health checks pass on a consistent installation.');
+console.log('✓ One-step setup can create and return a native spreadsheet.');

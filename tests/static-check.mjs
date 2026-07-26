@@ -80,6 +80,18 @@ check(
   'installer and demo seed cannot be called from the browser'
 );
 check(
+  allSource.includes("SpreadsheetApp.create(runtime.appName + ' Data')") &&
+    allSource.includes('Session.getEffectiveUser().getEmail()') &&
+    allSource.includes('createdSpreadsheet: createdSpreadsheet'),
+  'installer can create a native data store and infer the administrator'
+);
+check(
+  allSource.includes('function runStagingAcceptance(stagingToken)') &&
+    allSource.includes("config.environment !== 'staging'") &&
+    allSource.includes('OTC.PROPERTIES.STAGING_TOKEN'),
+  'remote staging acceptance is environment- and secret-gated'
+);
+check(
   allSource.includes('requireUser_(token') &&
     allSource.includes('computeHmacSha256Signature') &&
     allSource.includes('MAX_ATTEMPTS') &&
@@ -145,6 +157,7 @@ check(
 check(
   index.includes('configuration.currency') &&
     index.includes('configuration.locale') &&
+    index.includes('configuration.environment') &&
     index.includes('assignableUsers') &&
     index.includes('data-view="users"'),
   'runtime UI consumes deployment configuration and admin capabilities'
@@ -152,6 +165,13 @@ check(
 
 const manifest = JSON.parse(
   fs.readFileSync(path.join(src, 'appsscript.json'), 'utf8')
+);
+const packageJson = JSON.parse(
+  fs.readFileSync(path.join(root, 'package.json'), 'utf8')
+);
+check(
+  !packageJson.dependencies && !packageJson.devDependencies,
+  'repository installs with zero package dependencies'
 );
 assert.equal(manifest.runtimeVersion, 'V8');
 check(
@@ -164,13 +184,23 @@ check(
   manifest.webapp.executeAs === 'USER_DEPLOYING',
   'web app executes as the deployment owner'
 );
+check(
+  manifest.executionApi?.access === 'MYSELF',
+  'Apps Script Execution API is restricted to the deployment owner'
+);
 
 for (const file of [
   'README.md', 'README.es.md', 'LICENSE', 'SECURITY.md', 'CONTRIBUTING.md',
   'CODE_OF_CONDUCT.md', 'CHANGELOG.md', 'ROADMAP.md', 'CITATION.cff',
   'SUPPORT.md', 'docs/ARCHITECTURE.md', 'docs/CONFIGURATION.md',
   'docs/DATA_DICTIONARY.md', 'docs/DEPLOYMENT.md', 'docs/OPERATIONS.md',
-  'docs/SECURITY_MODEL.md', 'docs/UPGRADING.md'
+  'docs/SECURITY_MODEL.md', 'docs/UPGRADING.md',
+  '.github/workflows/apps-script-staging.yml',
+  'scripts/configure-clasp.mjs', 'scripts/apps-script-doctor.mjs',
+  'scripts/staging-check.mjs', 'scripts/media-check.mjs',
+  'tests/staging-check.mjs', 'docs/assets/product-tour.mp4',
+  'docs/assets/screenshots/dashboard.jpg', 'docs/assets/screenshots/leads.jpg',
+  'docs/assets/screenshots/new-lead.jpg', 'docs/assets/screenshots/users.jpg'
 ]) {
   check(fs.existsSync(path.join(root, file)), `${file} exists`);
 }
