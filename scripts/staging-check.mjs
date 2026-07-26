@@ -32,6 +32,18 @@ export function validateAcceptanceResult(result, expectedVersion) {
   return result;
 }
 
+export function formatClaspDiagnostics(execution, secrets = []) {
+  let output = [execution?.stdout, execution?.stderr]
+    .filter(Boolean)
+    .join('\n')
+    .trim();
+  for (const secret of secrets) {
+    if (secret) output = output.replaceAll(secret, '[REDACTED]');
+  }
+  if (!output) return '[clasp returned no output]';
+  return output.length > 4000 ? `…${output.slice(-4000)}` : output;
+}
+
 function main() {
   const token = String(process.env.TRAVEL_CRM_STAGING_TOKEN || '').trim();
   const expectedVersion = String(process.env.npm_package_version || '').trim();
@@ -51,14 +63,20 @@ function main() {
     ],
     {encoding: 'utf8', shell: false}
   );
+  const diagnostics = formatClaspDiagnostics(execution, [token]);
   if (execution.status !== 0) {
+    throw new Error(`Remote acceptance failed: ${diagnostics}`);
+  }
+  let acceptance;
+  try {
+    acceptance = extractAcceptanceResult(execution.stdout);
+  } catch (error) {
     throw new Error(
-      `Remote acceptance failed: ${String(execution.stderr || execution.stdout)
-        .replaceAll(token, '[REDACTED]').trim()}`
+      `${error.message} Sanitized clasp output: ${diagnostics}`
     );
   }
   const result = validateAcceptanceResult(
-    extractAcceptanceResult(execution.stdout),
+    acceptance,
     expectedVersion
   );
   console.log(
