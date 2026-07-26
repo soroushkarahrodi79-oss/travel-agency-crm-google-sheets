@@ -63,8 +63,8 @@ const allSource = gsFiles
   .join('\n');
 for (const name of [
   'requestAccessCode', 'verifyAccessCode', 'signOut', 'getBootstrap',
-  'getDashboard', 'searchLeads', 'getLead', 'saveLead', 'savePayment',
-  'cancelPayment', 'listUsers', 'saveUser'
+  'getDashboard', 'searchLeads', 'getFollowUpQueue', 'getLead', 'saveLead',
+  'savePayment', 'cancelPayment', 'listUsers', 'saveUser'
 ]) {
   check(
     new RegExp(`function\\s+${name}\\s*\\(`).test(allSource),
@@ -103,6 +103,14 @@ check(
     allSource.includes('assertLeadAccess_') &&
     allSource.includes('LockService.getScriptLock()'),
   'OTP sessions, ownership and concurrency controls are present'
+);
+check(
+  allSource.includes('function getFollowUpQueue(token, scope)') &&
+    allSource.includes('FOLLOW_UP_SCOPES') &&
+    allSource.includes('FOLLOW_UP_WINDOW_DAYS') &&
+    allSource.includes('function isoShift_(') &&
+    allSource.includes('Invalid follow-up scope'),
+  'follow-up queue is scope-validated and shares the dashboard date rules'
 );
 check(
   allSource.includes("function cellText_(") &&

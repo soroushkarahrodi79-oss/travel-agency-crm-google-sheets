@@ -4,6 +4,15 @@ All notable changes follow the principles of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and semantic
 versioning.
 
+## [Unreleased]
+
+### Added
+
+- Follow-up work queue with overdue, today and next-seven-day scopes, ordered
+  by urgency and reachable from a navigation entry that shows the overdue
+  count. It reuses the existing `Next follow-up` column, so no schema change
+  or migration is required.
+
 ## [1.2.0] - 2026-07-26
 
 ### Added

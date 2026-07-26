@@ -26,6 +26,7 @@
     nav{display:grid;gap:8px}
     nav button{border:0;background:transparent;color:#d9e8f6;text-align:left;padding:12px 14px;border-radius:12px;font-weight:700}
     nav button:hover,nav button.active{background:rgba(255,255,255,.12);color:#fff}
+    .nav-badge{display:inline-flex;align-items:center;justify-content:center;min-width:21px;margin-left:8px;padding:2px 6px;border-radius:999px;background:var(--red);color:#fff;font-size:11px;font-weight:900}
     .aside-note{position:absolute;left:18px;right:18px;bottom:24px;padding:14px;border:1px solid rgba(255,255,255,.15);border-radius:14px;font-size:12px;color:#c8d8e8}
     main{min-width:0;padding:28px}
     .topbar{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:24px}
@@ -112,6 +113,7 @@
       <nav aria-label="Main navigation">
         <button class="active" data-view="dashboard">Dashboard</button>
         <button data-view="leads">Leads</button>
+        <button data-view="followups">Follow-ups<span id="followUpBadge" class="nav-badge" hidden>0</span></button>
         <button data-action="new">New lead</button>
         <button id="usersNav" data-view="users" hidden>Users</button>
       </nav>
@@ -140,6 +142,18 @@
           <div class="section-head"><div><h2>Lead directory</h2><p>Search by name, phone, destination, status or ID.</p></div><button class="btn btn-primary" data-action="new">New lead</button></div>
           <div class="search"><input id="searchInput" class="input" placeholder="Search leads…" aria-label="Search leads"><select id="statusFilter" class="select" aria-label="Filter by status"><option value="">All statuses</option></select><button id="searchButton" class="btn btn-secondary">Search</button></div>
           <div id="leadList" class="list" style="margin-top:16px"></div>
+        </article>
+      </section>
+
+      <section id="followups" class="view">
+        <article class="card section">
+          <div class="section-head"><div><h2>Follow-up queue</h2><p>Leads waiting for your next action, most urgent first.</p></div></div>
+          <div class="toolbar" role="group" aria-label="Follow-up range">
+            <button class="btn btn-primary" type="button" data-followup-scope="OVERDUE">Overdue</button>
+            <button class="btn btn-secondary" type="button" data-followup-scope="TODAY">Today</button>
+            <button class="btn btn-secondary" type="button" data-followup-scope="WEEK">Next 7 days</button>
+          </div>
+          <div id="followUpList" class="list" style="margin-top:16px"></div>
         </article>
       </section>
 
@@ -178,11 +192,13 @@
 
   <script>
     var deployedEnvironment='<?= environment ?>';
-    var state={bootstrap:null,current:null,users:[],dirty:false,token:sessionStorage.getItem('otc_token')||'',email:'',messageTimer:null};
+    var state={bootstrap:null,current:null,users:[],dirty:false,followUpScope:'OVERDUE',token:sessionStorage.getItem('otc_token')||'',email:'',messageTimer:null};
     document.addEventListener('DOMContentLoaded',start);
     document.addEventListener('click',function(event){
       var viewButton=event.target.closest('[data-view]');
       if(viewButton){showView(viewButton.dataset.view);return;}
+      var scopeButton=event.target.closest('[data-followup-scope]');
+      if(scopeButton){loadFollowUps(scopeButton.dataset.followupScope).catch(function(error){showMessage(errorText(error),true);});return;}
       var action=event.target.closest('[data-action]');
       if(!action)return;
       if(action.dataset.action==='new'){
@@ -306,8 +322,42 @@
       setText('kpiSales',formatMoney(data.sales));
       setText('kpiOutstanding',formatMoney(data.outstanding));
       setText('kpiOverdue',data.overdueFollowUps);
+      setFollowUpBadge(data.overdueFollowUps);
       setText('kpiConversion',formatPercent(data.conversionRate));
       document.getElementById('recentList').innerHTML=renderLeadRows(data.recent);
+    }
+
+    async function loadFollowUps(scope){
+      var data=await api('getFollowUpQueue',scope||state.followUpScope||'OVERDUE');
+      state.followUpScope=data.scope;
+      document.getElementById('followUpList').innerHTML=renderFollowUpRows(data.leads,data.today);
+      document.querySelectorAll('[data-followup-scope]').forEach(function(button){
+        var isActive=button.dataset.followupScope===data.scope;
+        button.classList.toggle('btn-primary',isActive);
+        button.classList.toggle('btn-secondary',!isActive);
+        button.setAttribute('aria-pressed',String(isActive));
+      });
+      setFollowUpBadge(data.counts&&data.counts.OVERDUE);
+    }
+
+    function setFollowUpBadge(overdue){
+      var badge=document.getElementById('followUpBadge');
+      var count=Number(overdue||0);
+      badge.textContent=count;
+      badge.hidden=count===0;
+      badge.setAttribute('aria-label',count+' overdue follow-ups');
+    }
+
+    function renderFollowUpRows(leads,today){
+      if(!leads||!leads.length)return '<div class="empty">Nothing to follow up in this range.</div>';
+      return leads.map(function(lead){
+        var late=lead.nextFollowUp&&today&&lead.nextFollowUp<today;
+        return '<article class="lead-row"><div class="lead-main"><strong>'+esc(lead.name)+'</strong><small>'+esc(lead.id)+' · '+esc(lead.phone)+'</small></div>'+
+          '<div><small>Follow-up</small><strong'+(late?' style="color:var(--red)"':'')+'>'+esc(lead.nextFollowUp||'—')+'</strong></div>'+
+          '<div><small>Next action</small><strong>'+esc(lead.nextAction||'—')+'</strong></div>'+
+          '<div><span class="badge" data-status="'+esc(lead.status)+'">'+esc(label(lead.status))+'</span></div>'+
+          '<button class="btn btn-secondary" data-action="open" data-id="'+esc(lead.id)+'">Open</button></article>';
+      }).join('');
     }
 
     async function search(){
@@ -483,9 +533,10 @@
       if(id!=='editor')state.dirty=false;
       document.querySelectorAll('.view').forEach(function(view){view.classList.toggle('active',view.id===id);});
       document.querySelectorAll('nav [data-view]').forEach(function(button){button.classList.toggle('active',button.dataset.view===id);});
-      var titles={dashboard:'Sales overview',leads:'Lead directory',editor:'Customer file',users:'User access'};
+      var titles={dashboard:'Sales overview',leads:'Lead directory',followups:'Follow-up queue',editor:'Customer file',users:'User access'};
       document.getElementById('pageTitle').textContent=titles[id]||(state.bootstrap.configuration.appName||'Open Travel CRM');
       if(id==='users')loadUsers().catch(function(error){showMessage(errorText(error),true);});
+      if(id==='followups')loadFollowUps().catch(function(error){showMessage(errorText(error),true);});
     }
     function field(name,control,extra){var match=control.match(/\sid="([^"]+)"/);return '<div class="field '+(extra||'')+'"><label'+(match?' for="'+esc(match[1])+'"':'')+'>'+esc(name)+'</label>'+control+'</div>';}
     function input(id,val,placeholder,required,mode){return '<input id="'+id+'" class="input" value="'+esc(val===undefined||val===null?'':val)+'" placeholder="'+esc(placeholder||'')+'" '+(required?'required ':'')+(mode?'inputmode="'+mode+'"':'')+'>';}

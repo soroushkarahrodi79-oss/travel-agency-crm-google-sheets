@@ -41,6 +41,7 @@ It is designed to be:
 | Capability | Details |
 | --- | --- |
 | Lead pipeline | Create, search, filter and assign leads across seven statuses |
+| Follow-up queue | Overdue, today and next-seven-day views ordered by urgency |
 | Travel operations | Destination, provider, booking locator, route, travel dates and passengers |
 | Commercial tracking | Budget, final sale, follow-up date, next action and conversion metrics |
 | Installments | Add and edit payments, calculate balances and block overpayment |

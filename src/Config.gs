@@ -27,7 +27,8 @@ const OTC = Object.freeze({
   LIMITS: Object.freeze({
     MAX_MONEY: 1000000000,
     MAX_SEARCH_RESULTS: 100,
-    LOCK_TIMEOUT_MS: 20000
+    LOCK_TIMEOUT_MS: 20000,
+    FOLLOW_UP_WINDOW_DAYS: 7
   }),
   AUTH: Object.freeze({
     SECRET_PROPERTY: 'TRAVEL_CRM_AUTH_SECRET',
@@ -75,7 +76,8 @@ const OTC = Object.freeze({
     ],
     SERVICES: ['FLIGHT', 'PACKAGE', 'HOTEL', 'INSURANCE', 'VISA', 'OTHER'],
     SOURCES: ['WHATSAPP', 'INSTAGRAM', 'FACEBOOK', 'WEB', 'CALL', 'REFERRAL', 'OTHER'],
-    PAYMENT_METHODS: ['CARD', 'BANK_TRANSFER', 'CASH', 'FINANCING', 'OTHER']
+    PAYMENT_METHODS: ['CARD', 'BANK_TRANSFER', 'CASH', 'FINANCING', 'OTHER'],
+    FOLLOW_UP_SCOPES: ['OVERDUE', 'TODAY', 'WEEK']
   })
 });
 
@@ -254,6 +256,25 @@ function dateToIso_(value) {
   const date = value instanceof Date ? value : dateFromInput_(value);
   if (!date) return '';
   return Utilities.formatDate(date, getRuntimeConfig_().timeZone, 'yyyy-MM-dd');
+}
+
+/**
+ * Shifts a calendar date by whole days. The arithmetic is intentionally done
+ * in UTC on a date-only value so a daylight-saving transition inside the
+ * window can never turn a seven-day horizon into six or eight days.
+ */
+function isoShift_(isoDate, days) {
+  const parts = String(isoDate || '').split('-');
+  if (parts.length !== 3) return '';
+  const shifted = new Date(Date.UTC(
+    Number(parts[0]),
+    Number(parts[1]) - 1,
+    Number(parts[2]) + Number(days || 0)
+  ));
+  if (isNaN(shifted.getTime())) return '';
+  return shifted.getUTCFullYear() + '-' +
+    String(shifted.getUTCMonth() + 1).padStart(2, '0') + '-' +
+    String(shifted.getUTCDate()).padStart(2, '0');
 }
 
 function nowIso_() {
