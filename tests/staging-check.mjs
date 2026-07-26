@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {
+  buildClaspRunArgs,
   extractAcceptanceResult,
   formatClaspDiagnostics,
   validateAcceptanceResult
@@ -45,6 +46,18 @@ assert.equal(
 assert.equal(
   formatClaspDiagnostics({stdout: '', stderr: ''}),
   '[clasp returned no output]'
+);
+assert.deepEqual(
+  buildClaspRunArgs('staging-token'),
+  [
+    '--yes',
+    '@google/clasp@3.3.0',
+    '--json',
+    'run-function',
+    'runStagingAcceptance',
+    '--params',
+    '["staging-token"]'
+  ]
 );
 
 console.log('✓ Staging responses are parsed and fail closed on unhealthy deployments.');

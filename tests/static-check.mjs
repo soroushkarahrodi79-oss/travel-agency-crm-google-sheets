@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -210,7 +211,10 @@ check(
 );
 
 check(
-  !fs.existsSync(path.join(root, '.clasp.json')),
+  !execFileSync('git', ['ls-files', '--cached', '--', '.clasp.json'], {
+    cwd: root,
+    encoding: 'utf8'
+  }).trim(),
   'real Apps Script project identifier is not committed'
 );
 const claspIgnore = fs.readFileSync(path.join(root, '.claspignore'), 'utf8');
