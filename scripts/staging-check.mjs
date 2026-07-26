@@ -9,12 +9,22 @@ export function extractAcceptanceResult(output) {
     if (text[index] === '{') starts.push(index);
   }
   for (let index = starts.length - 1; index >= 0; index--) {
+    let parsed;
     try {
-      const parsed = JSON.parse(text.slice(starts[index]));
-      return parsed.result ?? parsed.response?.result ?? parsed;
+      parsed = JSON.parse(text.slice(starts[index]));
     } catch {
       // clasp can print progress lines before the final JSON object.
+      continue;
     }
+    if (parsed?.error) {
+      throw new Error('clasp returned an Apps Script execution error.');
+    }
+    return (
+      parsed?.response?.result ??
+      parsed?.response ??
+      parsed?.result ??
+      parsed
+    );
   }
   throw new Error('clasp did not return a JSON acceptance result.');
 }
