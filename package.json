@@ -1,12 +1,29 @@
 {
   "name": "travel-agency-crm-google-sheets",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Open-source travel agency CRM built with Google Sheets and Apps Script",
+  "keywords": [
+    "google-apps-script",
+    "google-sheets",
+    "crm",
+    "travel-agency",
+    "open-source"
+  ],
+  "homepage": "https://soroushkarahrodi79-oss.github.io/travel-agency-crm-google-sheets/",
+  "bugs": {
+    "url": "https://github.com/soroushkarahrodi79-oss/travel-agency-crm-google-sheets/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soroushkarahrodi79-oss/travel-agency-crm-google-sheets.git"
+  },
   "scripts": {
     "test": "node tests/static-check.mjs && node tests/unit-check.mjs",
     "security:scan": "node scripts/security-scan.mjs",
-    "check": "npm test && npm run security:scan"
+    "docs:check": "node scripts/check-doc-links.mjs",
+    "release:check": "node scripts/release-check.mjs",
+    "check": "npm test && npm run docs:check && npm run security:scan && npm run release:check"
   },
   "engines": {
     "node": ">=20"

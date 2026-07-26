@@ -12,10 +12,11 @@ Explain the user or operational problem.
 - [ ] Authorization and ownership behavior reviewed
 - [ ] Payment history remains auditable
 - [ ] New OAuth scopes documented, or no new scopes
+- [ ] Schema and rollback impact documented, or no schema change
 
 ## Validation
 
-- [ ] `npm test`
-- [ ] `npm run security:scan`
+- [ ] `npm run check`
 - [ ] Documentation updated
 - [ ] Mobile layout checked when UI changed
+- [ ] Upgrade tested against a copied spreadsheet when behavior or schema changed

@@ -11,13 +11,14 @@
   <text x="38" y="138" font-family="Arial" font-size="13" font-weight="700" fill="#fff">Dashboard</text>
   <text x="38" y="186" font-family="Arial" font-size="13" font-weight="700" fill="#c8d8e8">Leads</text>
   <text x="38" y="234" font-family="Arial" font-size="13" font-weight="700" fill="#c8d8e8">New lead</text>
+  <text x="38" y="282" font-family="Arial" font-size="13" font-weight="700" fill="#c8d8e8">Users</text>
   <text x="274" y="58" font-family="Arial" font-size="32" font-weight="800" fill="#132238">Sales overview</text>
   <text x="274" y="83" font-family="Arial" font-size="13" fill="#63748a">Leads, bookings and installment payments in one workspace.</text>
   <g transform="translate(274 120)" font-family="Arial">
     <g><rect width="220" height="118" rx="17" fill="#fff" stroke="#d9e3ee"/><text x="20" y="32" font-size="12" fill="#63748a">ACCESSIBLE LEADS</text><text x="20" y="82" font-size="34" font-weight="800" fill="#12385f">24</text></g>
     <g transform="translate(236)"><rect width="220" height="118" rx="17" fill="#fff" stroke="#d9e3ee"/><text x="20" y="32" font-size="12" fill="#63748a">PIPELINE</text><text x="20" y="82" font-size="30" font-weight="800" fill="#12385f">€18,450</text></g>
     <g transform="translate(472)"><rect width="220" height="118" rx="17" fill="#fff" stroke="#d9e3ee"/><text x="20" y="32" font-size="12" fill="#63748a">CONFIRMED SALES</text><text x="20" y="82" font-size="30" font-weight="800" fill="#15805d">€8,400</text></g>
-    <g transform="translate(708)"><rect width="220" height="118" rx="17" fill="#fff" stroke="#d9e3ee"/><text x="20" y="32" font-size="12" fill="#63748a">PENDING PAYMENT</text><text x="20" y="82" font-size="34" font-weight="800" fill="#ef8b22">5</text></g>
+    <g transform="translate(708)"><rect width="220" height="118" rx="17" fill="#fff" stroke="#d9e3ee"/><text x="20" y="32" font-size="12" fill="#63748a">OUTSTANDING</text><text x="20" y="82" font-size="29" font-weight="800" fill="#ef8b22">€2,100</text></g>
   </g>
   <g transform="translate(274 266)" font-family="Arial">
     <rect width="928" height="392" rx="18" fill="#fff" stroke="#d9e3ee"/>

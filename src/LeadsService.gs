@@ -1,10 +1,15 @@
 function getDashboard(token) {
   const user = requireUser_(token, ['ADMIN', 'AGENT']);
   const rows = accessibleLeadRows_(user);
+  const paidByLead = activePaymentTotalsByLead_();
   const byStatus = {};
   OTC.OPTIONS.STATUSES.forEach(function(status) { byStatus[status] = 0; });
   let pipeline = 0;
   let sales = 0;
+  let outstanding = 0;
+  let won = 0;
+  let overdueFollowUps = 0;
+  const today = dateToIso_(new Date());
   rows.forEach(function(row) {
     const status = cleanText_(row[6], 50);
     byStatus[status] = (byStatus[status] || 0) + 1;
@@ -12,22 +17,51 @@ function getDashboard(token) {
     const sale = money_(row[10]);
     if (Number.isFinite(budget)) pipeline += budget;
     if (Number.isFinite(sale)) sales += sale;
+    if (status === 'CLOSED_WON') won++;
+    const total = leadTotal_({saleAmount: finiteOrBlank_(sale), budget: finiteOrBlank_(budget)});
+    if (Number.isFinite(total)) {
+      outstanding += Math.max(0, total - Number(paidByLead[cleanText_(row[0], 120)] || 0));
+    }
+    const followUp = dateToIso_(row[14]);
+    if (
+      followUp &&
+      followUp < today &&
+      status !== 'CLOSED_WON' &&
+      status !== 'LOST'
+    ) overdueFollowUps++;
   });
+  const recent = rows.slice().sort(function(left, right) {
+    return dateSortValue_(right[17]) - dateSortValue_(left[17]);
+  }).slice(0, 6).map(mapLeadRow_);
   return {
     total: rows.length,
     pipeline: roundMoney_(pipeline),
     sales: roundMoney_(sales),
+    outstanding: roundMoney_(outstanding),
+    overdueFollowUps: overdueFollowUps,
+    conversionRate: rows.length ? roundMoney_(won * 100 / rows.length) : 0,
     byStatus: byStatus,
-    recent: rows.slice(-6).reverse().map(mapLeadRow_)
+    recent: recent
   };
 }
 
-function searchLeads(token, query, limit) {
+function searchLeads(token, query, limit, filters) {
   const user = requireUser_(token, ['ADMIN', 'AGENT']);
   const needle = normalize_(query);
-  const max = Math.min(Math.max(Number(limit) || 30, 1), 100);
+  const max = Math.min(
+    Math.max(Number(limit) || 30, 1),
+    OTC.LIMITS.MAX_SEARCH_RESULTS
+  );
+  const criteria = filters || {};
+  const status = cleanText_(criteria.status, 50).toUpperCase();
+  if (status && OTC.OPTIONS.STATUSES.indexOf(status) === -1) {
+    throw new Error('Invalid status filter.');
+  }
   return accessibleLeadRows_(user)
     .filter(function(row) {
+      if (status && cleanText_(row[6], 50).toUpperCase() !== status) {
+        return false;
+      }
       if (!needle) return true;
       return [row[0], row[2], row[3], row[6], row[7], row[8], row[15]]
         .some(function(value) { return normalize_(value).indexOf(needle) >= 0; });
@@ -68,6 +102,7 @@ function saveLead(token, input) {
     let rowNumber = existingRow;
     let id = requestedId;
     let createdAt = now;
+    let previousOwner = '';
 
     if (existingRow) {
       const existing = leads.getRange(
@@ -75,6 +110,7 @@ function saveLead(token, input) {
       ).getValues()[0];
       assertLeadAccess_(user, existing);
       createdAt = existing[1] || now;
+      previousOwner = cleanText_(existing[4], 200).toLowerCase();
     } else {
       id = nextLeadId_(leads);
       rowNumber = firstFreeRow_(leads, 1);
@@ -83,8 +119,24 @@ function saveLead(token, input) {
     const owner = resolveOwnerEmail_(user, data.agentEmail);
     const saleAmount = optionalMoney_(data.saleAmount, 'Sale amount');
     const budget = optionalMoney_(data.budget, 'Budget');
+    const activePaid = existingRow
+      ? summarizePayments_(
+        {saleAmount: saleAmount, budget: budget},
+        listPayments_(id)
+      ).paid
+      : 0;
+    const total = leadTotal_({saleAmount: saleAmount, budget: budget});
+    if (activePaid > 0 && !Number.isFinite(total)) {
+      throw new Error('A sale total is required while active payments exist.');
+    }
+    if (Number.isFinite(total) && activePaid > total + 0.01) {
+      throw new Error(
+        'Sale total cannot be lower than active payments (' +
+        activePaid + ').'
+      );
+    }
     let status = allowedOption_(data.status || 'NEW', OTC.OPTIONS.STATUSES, 'status');
-    if (status === 'CLOSED_WON' && Number.isFinite(saleAmount)) {
+    if (status === 'CLOSED_WON' && Number.isFinite(total)) {
       const summary = summarizePayments_(
         {saleAmount: saleAmount, budget: budget},
         listPayments_(id)
@@ -123,7 +175,10 @@ function saveLead(token, input) {
       existingRow ? 'UPDATE_LEAD' : 'CREATE_LEAD',
       'LEAD',
       id,
-      'Status: ' + status
+      'Status: ' + status + '; owner: ' + owner +
+      (previousOwner && previousOwner !== owner
+        ? '; transferred from: ' + previousOwner
+        : '')
     );
     SpreadsheetApp.flush();
     return {ok: true, lead: getLeadForUser_(user, id)};
@@ -180,16 +235,19 @@ function validateLeadInput_(data) {
 function resolveOwnerEmail_(user, requestedEmail) {
   if (user.role !== 'ADMIN') return user.email;
   const email = cleanText_(requestedEmail, 200).toLowerCase() || user.email;
-  const users = getCrmSheet_(OTC.SHEETS.USERS);
-  const row = findRowById_(users, 1, email);
-  if (!row) throw new Error('Selected agent is not registered in USERS.');
-  const active = users.getRange(row, 4).getValue();
-  if (active !== true) throw new Error('Selected agent is disabled.');
-  return email;
+  const selected = findActiveUserByEmail_(email);
+  if (!selected) {
+    throw new Error('Selected owner is disabled or not registered in USERS.');
+  }
+  return selected.email;
 }
 
 function nextLeadId_(sheet) {
-  const year = Utilities.formatDate(new Date(), OTC.TIME_ZONE, 'yyyy');
+  const year = Utilities.formatDate(
+    new Date(),
+    getRuntimeConfig_().timeZone,
+    'yyyy'
+  );
   let max = 0;
   if (sheet.getLastRow() > 1) {
     sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getDisplayValues()
@@ -214,8 +272,14 @@ function allowedOption_(value, options, fieldName) {
 function optionalMoney_(value, label) {
   if (value === '' || value === null || value === undefined) return NaN;
   const number = money_(value);
-  if (!Number.isFinite(number) || number < 0) {
-    throw new Error(label + ' must be zero or greater.');
+  if (
+    !Number.isFinite(number) ||
+    number < 0 ||
+    number > OTC.LIMITS.MAX_MONEY
+  ) {
+    throw new Error(
+      label + ' must be between zero and ' + OTC.LIMITS.MAX_MONEY + '.'
+    );
   }
   return roundMoney_(number);
 }
@@ -236,12 +300,42 @@ function roundMoney_(value) {
   return Math.round(Number(value || 0) * 100) / 100;
 }
 
-function listAgentEmails_() {
+function listAssignableUsers_() {
   const sheet = getCrmSheet_(OTC.SHEETS.USERS);
   if (sheet.getLastRow() <= 1) return [];
   return sheet.getRange(2, 1, sheet.getLastRow() - 1, 4).getValues()
-    .filter(function(row) { return row[3] === true; })
+    .filter(function(row) {
+      const role = cleanText_(row[2], 20).toUpperCase();
+      const active = row[3] === true || normalize_(row[3]) === 'true';
+      return active && OTC.OPTIONS.ROLES.indexOf(role) >= 0;
+    })
     .map(function(row) {
-      return {email: cleanText_(row[0], 200), name: cleanText_(row[1], 120)};
+      return {
+        email: cleanText_(row[0], 200),
+        name: cleanText_(row[1], 120),
+        role: cleanText_(row[2], 20).toUpperCase()
+      };
     });
+}
+
+function activePaymentTotalsByLead_() {
+  const sheet = getCrmSheet_(OTC.SHEETS.PAYMENTS);
+  const totals = {};
+  if (sheet.getLastRow() <= 1) return totals;
+  sheet.getRange(
+    2, 1, sheet.getLastRow() - 1, OTC.HEADERS.PAYMENTS.length
+  ).getValues().forEach(function(row) {
+    if (cleanText_(row[7], 30) !== 'ACTIVE') return;
+    const leadId = cleanText_(row[1], 120);
+    const amount = money_(row[3]);
+    if (!leadId || !Number.isFinite(amount)) return;
+    totals[leadId] = roundMoney_(Number(totals[leadId] || 0) + amount);
+  });
+  return totals;
+}
+
+function dateSortValue_(value) {
+  if (value instanceof Date) return value.getTime();
+  const parsed = new Date(cleanText_(value, 50));
+  return isNaN(parsed.getTime()) ? 0 : parsed.getTime();
 }
