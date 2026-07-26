@@ -8,6 +8,9 @@ versioning.
 
 ### Added
 
+- Outstanding-balance and payment-aging report, aged against each departure
+  date rather than debt age, with per-bucket totals, urgency ordering and a
+  CSV export whose cells are neutralised against spreadsheet formula injection.
 - Spanish interface and error messages, selected by `TRAVEL_CRM_LOCALE`. The
   message catalogue lives in `src/I18n.gs`, ships with the first paint so the
   sign-in screen is already translated, and falls back to English for any

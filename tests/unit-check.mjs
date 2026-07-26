@@ -78,6 +78,22 @@ assert.equal(run('isoShift_("2028-02-28", 1)'), '2028-02-29');
 // A daylight-saving transition must not stretch or shrink the horizon.
 assert.equal(run('isoShift_("2026-03-26", 7)'), '2026-04-02');
 assert.equal(run('isoShift_("2026-10-22", 7)'), '2026-10-29');
+assert.equal(run('isoDayDelta_("2026-07-26", "2026-08-02")'), 7);
+assert.equal(run('isoDayDelta_("2026-08-02", "2026-07-26")'), -7);
+assert.equal(run('isoDayDelta_("2026-07-26", "2026-07-26")'), 0);
+// Counting across a daylight-saving change must not gain or lose a day.
+assert.equal(run('isoDayDelta_("2026-03-26", "2026-04-02")'), 7);
+assert.equal(run('isoDayDelta_("2026-10-22", "2026-10-29")'), 7);
+assert.equal(run('isoDayDelta_("bad", "2026-07-26")'), null);
+
+assert.equal(run('agingBucket_(null)'), 'NO_TRAVEL_DATE');
+assert.equal(run('agingBucket_(-1)'), 'OVERDUE');
+assert.equal(run('agingBucket_(0)'), 'DUE_SOON');
+assert.equal(run('agingBucket_(7)'), 'DUE_SOON');
+assert.equal(run('agingBucket_(8)'), 'DUE_LATER');
+assert.equal(run('agingBucket_(30)'), 'DUE_LATER');
+assert.equal(run('agingBucket_(31)'), 'SCHEDULED');
+
 assert.equal(run('isoShift_("", 7)'), '');
 assert.equal(run('isoShift_("not-a-date", 7)'), '');
 

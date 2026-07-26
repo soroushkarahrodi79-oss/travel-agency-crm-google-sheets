@@ -42,6 +42,7 @@ It is designed to be:
 | --- | --- |
 | Lead pipeline | Create, search, filter and assign leads across seven statuses |
 | Follow-up queue | Overdue, today and next-seven-day views ordered by urgency |
+| Balance reporting | Outstanding balances aged against departure, exportable to CSV |
 | Languages | Spanish and English interface and errors, selected by deployment locale |
 | Travel operations | Destination, provider, booking locator, route, travel dates and passengers |
 | Commercial tracking | Budget, final sale, follow-up date, next action and conversion metrics |

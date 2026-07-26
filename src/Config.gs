@@ -28,7 +28,10 @@ const OTC = Object.freeze({
     MAX_MONEY: 1000000000,
     MAX_SEARCH_RESULTS: 100,
     LOCK_TIMEOUT_MS: 20000,
-    FOLLOW_UP_WINDOW_DAYS: 7
+    FOLLOW_UP_WINDOW_DAYS: 7,
+    AGING_SOON_DAYS: 7,
+    AGING_NEAR_DAYS: 30,
+    MAX_REPORT_ROWS: 500
   }),
   AUTH: Object.freeze({
     SECRET_PROPERTY: 'TRAVEL_CRM_AUTH_SECRET',
@@ -77,7 +80,11 @@ const OTC = Object.freeze({
     SERVICES: ['FLIGHT', 'PACKAGE', 'HOTEL', 'INSURANCE', 'VISA', 'OTHER'],
     SOURCES: ['WHATSAPP', 'INSTAGRAM', 'FACEBOOK', 'WEB', 'CALL', 'REFERRAL', 'OTHER'],
     PAYMENT_METHODS: ['CARD', 'BANK_TRANSFER', 'CASH', 'FINANCING', 'OTHER'],
-    FOLLOW_UP_SCOPES: ['OVERDUE', 'TODAY', 'WEEK']
+    FOLLOW_UP_SCOPES: ['OVERDUE', 'TODAY', 'WEEK'],
+    // Ordered from most to least urgent; the report relies on this order.
+    AGING_BUCKETS: [
+      'OVERDUE', 'DUE_SOON', 'DUE_LATER', 'SCHEDULED', 'NO_TRAVEL_DATE'
+    ]
   })
 });
 
@@ -264,17 +271,35 @@ function dateToIso_(value) {
  * window can never turn a seven-day horizon into six or eight days.
  */
 function isoShift_(isoDate, days) {
-  const parts = String(isoDate || '').split('-');
-  if (parts.length !== 3) return '';
-  const shifted = new Date(Date.UTC(
-    Number(parts[0]),
-    Number(parts[1]) - 1,
-    Number(parts[2]) + Number(days || 0)
-  ));
-  if (isNaN(shifted.getTime())) return '';
+  const base = isoToUtc_(isoDate);
+  if (base === null) return '';
+  const shifted = new Date(base + Number(days || 0) * 86400000);
   return shifted.getUTCFullYear() + '-' +
     String(shifted.getUTCMonth() + 1).padStart(2, '0') + '-' +
     String(shifted.getUTCDate()).padStart(2, '0');
+}
+
+/**
+ * Whole days between two calendar dates, counted the same way, so a
+ * daylight-saving transition between them cannot add or drop a day.
+ * Returns null when either date is unusable.
+ */
+function isoDayDelta_(fromIso, toIso) {
+  const from = isoToUtc_(fromIso);
+  const to = isoToUtc_(toIso);
+  if (from === null || to === null) return null;
+  return Math.round((to - from) / 86400000);
+}
+
+function isoToUtc_(isoDate) {
+  const parts = String(isoDate || '').split('-');
+  if (parts.length !== 3) return null;
+  const time = Date.UTC(
+    Number(parts[0]),
+    Number(parts[1]) - 1,
+    Number(parts[2])
+  );
+  return isNaN(time) ? null : time;
 }
 
 function nowIso_() {

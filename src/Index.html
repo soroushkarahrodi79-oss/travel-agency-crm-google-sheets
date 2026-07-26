@@ -38,6 +38,7 @@
     .grid-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:14px;margin-bottom:22px}
     .card{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
     .kpi{padding:20px}.kpi span{display:block;color:var(--muted);font-size:13px}.kpi strong{display:block;margin-top:8px;font-size:28px;color:var(--navy)}
+    .kpi small{display:block;margin-top:4px;color:var(--muted);font-size:12px}
     .section{padding:22px;margin-bottom:20px}
     .section-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:18px}
     .section-head h2,.section-head h3{margin:0}.section-head p{margin:4px 0 0;color:var(--muted);font-size:13px}
@@ -114,6 +115,7 @@
         <button class="active" data-view="dashboard" data-i18n>Dashboard</button>
         <button data-view="leads">Leads</button>
         <button data-view="followups"><span data-i18n>Follow-ups</span><span id="followUpBadge" class="nav-badge" hidden>0</span></button>
+        <button data-view="balances" data-i18n>Balances</button>
         <button data-action="new" data-i18n>New lead</button>
         <button id="usersNav" data-view="users" hidden data-i18n>Users</button>
       </nav>
@@ -154,6 +156,18 @@
             <button class="btn btn-secondary" type="button" data-followup-scope="WEEK" data-i18n>Next 7 days</button>
           </div>
           <div id="followUpList" class="list" style="margin-top:16px"></div>
+        </article>
+      </section>
+
+      <section id="balances" class="view">
+        <article class="card section">
+          <div class="section-head">
+            <div><h2 data-i18n>Outstanding balances</h2><p data-i18n>Money still to collect, aged against each departure date.</p></div>
+            <button id="exportBalances" class="btn btn-secondary" type="button" data-i18n>Download CSV</button>
+          </div>
+          <div id="balanceTotals" class="summary"></div>
+          <div id="balanceBuckets" class="grid-kpi"></div>
+          <div id="balanceList" class="list"></div>
         </article>
       </section>
 
@@ -199,7 +213,7 @@
       document.querySelectorAll('[data-i18n-placeholder]').forEach(function(node){node.placeholder=t(node.placeholder);});
       document.querySelectorAll('[data-i18n-label]').forEach(function(node){node.setAttribute('aria-label',t(node.getAttribute('aria-label')));});
     }
-    var state={bootstrap:null,current:null,users:[],dirty:false,followUpScope:'OVERDUE',token:sessionStorage.getItem('otc_token')||'',email:'',messageTimer:null};
+    var state={bootstrap:null,current:null,users:[],balances:null,dirty:false,followUpScope:'OVERDUE',token:sessionStorage.getItem('otc_token')||'',email:'',messageTimer:null};
     document.addEventListener('DOMContentLoaded',start);
     document.addEventListener('click',function(event){
       var viewButton=event.target.closest('[data-view]');
@@ -229,6 +243,7 @@
       document.getElementById('searchButton').addEventListener('click',search);
       document.getElementById('searchInput').addEventListener('keydown',function(e){if(e.key==='Enter')search();});
       document.getElementById('statusFilter').addEventListener('change',search);
+      document.getElementById('exportBalances').addEventListener('click',exportBalancesCsv);
       document.getElementById('userForm').addEventListener('submit',saveUserUi);
       document.getElementById('userReset').addEventListener('click',resetUserForm);
       document.getElementById('cancelForm').addEventListener('submit',confirmCancelPaymentUi);
@@ -366,6 +381,70 @@
           '<div><span class="badge" data-status="'+esc(lead.status)+'">'+esc(label(lead.status))+'</span></div>'+
           '<button class="btn btn-secondary" data-action="open" data-id="'+esc(lead.id)+'">'+esc(t('Open'))+'</button></article>';
       }).join('');
+    }
+
+    async function loadBalances(){
+      var report=await api('getOutstandingReport');
+      state.balances=report;
+      document.getElementById('balanceTotals').innerHTML=
+        '<div><span>'+esc(t('Leads with balance'))+'</span><strong>'+report.totals.leads+'</strong></div>'+
+        '<div><span>'+esc(t('Collected'))+'</span><strong>'+formatMoney(report.totals.paid)+'</strong></div>'+
+        '<div><span>'+esc(t('Outstanding balance'))+'</span><strong>'+formatMoney(report.totals.outstanding)+'</strong></div>';
+      document.getElementById('balanceBuckets').innerHTML=Object.keys(report.buckets).map(function(name){
+        var bucket=report.buckets[name];
+        return '<article class="card kpi"><span>'+esc(bucketLabel(name))+'</span><strong>'+formatMoney(bucket.outstanding)+'</strong><small>'+bucket.count+' '+esc(t('leads'))+'</small></article>';
+      }).join('');
+      document.getElementById('balanceList').innerHTML=renderBalanceRows(report.rows);
+    }
+
+    function bucketLabel(name){
+      // Spelled out rather than humanised from the constant, because "Overdue"
+      // already means an overdue follow-up elsewhere in the interface.
+      if(name==='OVERDUE')return t('Travel already started');
+      if(name==='DUE_SOON')return t('Due within 7 days');
+      if(name==='DUE_LATER')return t('Due within 30 days');
+      if(name==='SCHEDULED')return t('Scheduled');
+      return t('No travel date');
+    }
+
+    function renderBalanceRows(rows){
+      if(!rows||!rows.length)return '<div class="empty">'+esc(t('Nothing outstanding. Every accessible lead is fully collected.'))+'</div>';
+      return rows.map(function(row){
+        var late=row.bucket==='OVERDUE';
+        return '<article class="lead-row"><div class="lead-main"><strong>'+esc(row.name)+'</strong><small>'+esc(row.id)+' · '+esc(row.destination||'—')+'</small></div>'+
+          '<div><small>'+esc(t('Travel start'))+'</small><strong'+(late?' style="color:var(--red)"':'')+'>'+esc(row.travelStart||'—')+'</strong></div>'+
+          '<div><small>'+esc(t('Paid'))+'</small><strong>'+formatMoney(row.paid)+'</strong></div>'+
+          '<div><small>'+esc(t('Balance'))+'</small><strong>'+formatMoney(row.balance)+'</strong></div>'+
+          '<button class="btn btn-secondary" data-action="open" data-id="'+esc(row.id)+'">'+esc(t('Open'))+'</button></article>';
+      }).join('');
+    }
+
+    function exportBalancesCsv(){
+      var report=state.balances;
+      if(!report||!report.rows.length){showMessage(t('There is nothing to export yet.'),true);return;}
+      var headers=[t('Lead ID'),t('Name'),t('Phone'),t('Owner'),t('Status'),t('Destination'),t('Travel start'),t('Days to travel'),t('Sale total'),t('Paid'),t('Balance'),t('Last payment'),t('Aging bucket')];
+      var lines=[headers.map(csvCell).join(',')];
+      report.rows.forEach(function(row){
+        lines.push([row.id,row.name,row.phone,row.agentEmail,label(row.status),row.destination,row.travelStart,row.daysToTravel,row.total,row.paid,row.balance,row.lastPaymentDate,bucketLabel(row.bucket)].map(csvCell).join(','));
+      });
+      downloadCsv('outstanding-balances-'+report.today+'.csv',lines.join('\r\n'));
+    }
+
+    // A spreadsheet treats a leading =, +, - or @ as a formula, so exported
+    // cells are neutralised exactly as the server does when writing to Sheets.
+    function csvCell(value){
+      var text=String(value===null||value===undefined?'':value);
+      if(/^[=+\-@\t\r]/.test(text))text="'"+text;
+      return '"'+text.replace(/"/g,'""')+'"';
+    }
+
+    function downloadCsv(filename,content){
+      // The byte-order mark keeps accented characters intact in Excel.
+      var url=URL.createObjectURL(new Blob(['﻿'+content],{type:'text/csv;charset=utf-8;'}));
+      var link=document.createElement('a');
+      link.href=url;link.download=filename;
+      document.body.appendChild(link);link.click();document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     }
 
     async function search(){
@@ -541,10 +620,11 @@
       if(id!=='editor')state.dirty=false;
       document.querySelectorAll('.view').forEach(function(view){view.classList.toggle('active',view.id===id);});
       document.querySelectorAll('nav [data-view]').forEach(function(button){button.classList.toggle('active',button.dataset.view===id);});
-      var titles={dashboard:'Sales overview',leads:'Lead directory',followups:'Follow-up queue',editor:'Customer file',users:'User access'};
+      var titles={dashboard:'Sales overview',leads:'Lead directory',followups:'Follow-up queue',balances:'Outstanding balances',editor:'Customer file',users:'User access'};
       document.getElementById('pageTitle').textContent=titles[id]?t(titles[id]):(state.bootstrap.configuration.appName||'Open Travel CRM');
       if(id==='users')loadUsers().catch(function(error){showMessage(errorText(error),true);});
       if(id==='followups')loadFollowUps().catch(function(error){showMessage(errorText(error),true);});
+      if(id==='balances')loadBalances().catch(function(error){showMessage(errorText(error),true);});
     }
     function field(name,control,extra){var match=control.match(/\sid="([^"]+)"/);return '<div class="field '+(extra||'')+'"><label'+(match?' for="'+esc(match[1])+'"':'')+'>'+esc(t(name))+'</label>'+control+'</div>';}
     function input(id,val,placeholder,required,mode){return '<input id="'+id+'" class="input" value="'+esc(val===undefined||val===null?'':val)+'" placeholder="'+esc(t(placeholder||''))+'" '+(required?'required ':'')+(mode?'inputmode="'+mode+'"':'')+'>';}
