@@ -44,6 +44,18 @@ export function formatClaspDiagnostics(execution, secrets = []) {
   return output.length > 4000 ? `…${output.slice(-4000)}` : output;
 }
 
+export function buildClaspRunArgs(token) {
+  return [
+    '--yes',
+    '@google/clasp@3.3.0',
+    '--json',
+    'run-function',
+    'runStagingAcceptance',
+    '--params',
+    JSON.stringify([token])
+  ];
+}
+
 function main() {
   const token = String(process.env.TRAVEL_CRM_STAGING_TOKEN || '').trim();
   const expectedVersion = String(process.env.npm_package_version || '').trim();
@@ -53,14 +65,7 @@ function main() {
   const command = process.platform === 'win32' ? 'npx.cmd' : 'npx';
   const execution = spawnSync(
     command,
-    [
-      '--yes',
-      '@google/clasp@3.3.0',
-      'run-function',
-      'runStagingAcceptance',
-      '--params',
-      JSON.stringify([token])
-    ],
+    buildClaspRunArgs(token),
     {encoding: 'utf8', shell: false}
   );
   const diagnostics = formatClaspDiagnostics(execution, [token]);

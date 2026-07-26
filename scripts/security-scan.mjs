@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const excludedDirectories = new Set(['.git', 'node_modules', 'coverage', 'dist']);
 const excludedFiles = new Set(['.clasp.json.example']);
 const findings = [];
 
@@ -16,16 +16,20 @@ const rules = [
   ['hard-coded Script ID', /"scriptId"\s*:\s*"(?!YOUR_)[A-Za-z0-9_-]{20,}"/]
 ];
 
-function walk(directory) {
-  for (const entry of fs.readdirSync(directory, {withFileTypes: true})) {
-    if (entry.isDirectory() && excludedDirectories.has(entry.name)) continue;
-    const absolute = path.join(directory, entry.name);
-    if (entry.isDirectory()) {
-      walk(absolute);
-      continue;
-    }
-    if (excludedFiles.has(entry.name)) continue;
-    const relative = path.relative(root, absolute);
+function getPublishableFiles() {
+  const output = execFileSync(
+    'git',
+    ['ls-files', '-z', '--cached', '--others', '--exclude-standard'],
+    {cwd: root, encoding: 'utf8'}
+  );
+  return output.split('\0').filter(Boolean);
+}
+
+function scan() {
+  for (const relative of getPublishableFiles()) {
+    if (excludedFiles.has(path.basename(relative))) continue;
+    const absolute = path.join(root, relative);
+    if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) continue;
     const buffer = fs.readFileSync(absolute);
     if (buffer.includes(0)) continue;
     const text = buffer.toString('utf8');
@@ -46,11 +50,7 @@ function walk(directory) {
   }
 }
 
-walk(root);
-
-if (fs.existsSync(path.join(root, '.clasp.json'))) {
-  findings.push('real .clasp.json file is present');
-}
+scan();
 
 if (findings.length) {
   console.error('Potential publication blockers:');
