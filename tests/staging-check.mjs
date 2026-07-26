@@ -24,6 +24,17 @@ assert.deepEqual(
   extractAcceptanceResult(JSON.stringify({response: {result: healthy}})),
   healthy
 );
+assert.deepEqual(
+  extractAcceptanceResult(JSON.stringify({response: healthy})),
+  healthy
+);
+assert.throws(
+  () => extractAcceptanceResult(JSON.stringify({
+    response: null,
+    error: {message: 'redacted remote failure'}
+  })),
+  /execution error/
+);
 assert.equal(validateAcceptanceResult(healthy, '1.2.0'), healthy);
 assert.throws(
   () => validateAcceptanceResult({...healthy, environment: 'production'}, '1.2.0'),
