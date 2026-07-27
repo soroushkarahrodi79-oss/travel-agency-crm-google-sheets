@@ -117,6 +117,7 @@
         <button data-view="followups"><span data-i18n>Follow-ups</span><span id="followUpBadge" class="nav-badge" hidden>0</span></button>
         <button data-view="balances" data-i18n>Balances</button>
         <button data-action="new" data-i18n>New lead</button>
+        <button id="templatesNav" data-view="templates" hidden data-i18n>Templates</button>
         <button id="usersNav" data-view="users" hidden data-i18n>Users</button>
       </nav>
       <div class="aside-note" data-i18n>Open-source sample · No customer data is bundled.</div>
@@ -168,6 +169,25 @@
           <div id="balanceTotals" class="summary"></div>
           <div id="balanceBuckets" class="grid-kpi"></div>
           <div id="balanceList" class="list"></div>
+        </article>
+      </section>
+
+      <section id="templates" class="view">
+        <article class="card section">
+          <div class="section-head"><div><h2 data-i18n>Quote and email templates</h2><p data-i18n>Reusable text agents can render onto any lead.</p></div></div>
+          <form id="templateForm">
+            <input id="templateId" type="hidden">
+            <div class="form-grid">
+              <div class="field full"><label for="templateName" data-i18n>Name</label><input id="templateName" class="input" required maxlength="120" placeholder="E.g. Standard flight quote" data-i18n-placeholder></div>
+              <div class="field"><label for="templateType" data-i18n>Template type</label><select id="templateType" class="select"><option value="QUOTE" data-i18n>Quote</option><option value="EMAIL" data-i18n>Email</option></select></div>
+              <div class="field"><label for="templateActive" data-i18n>Access</label><select id="templateActive" class="select"><option value="true" data-i18n>Active</option><option value="false" data-i18n>Disabled</option></select></div>
+              <div class="field full"><label for="templateSubject" data-i18n>Subject</label><input id="templateSubject" class="input" maxlength="200" placeholder="Only used for email templates" data-i18n-placeholder></div>
+              <div class="field full"><label for="templateBody" data-i18n>Body</label><textarea id="templateBody" class="textarea" required maxlength="4000" placeholder="Hi {{name}}, your trip to {{destination}}…" data-i18n-placeholder></textarea></div>
+            </div>
+            <p class="auth-hint" data-i18n>Placeholders: {{name}}, {{phone}}, {{destination}}, {{service}}, {{travelStart}}, {{travelEnd}}, {{passengers}}, {{nextAction}}, {{budget}}, {{saleAmount}}, {{total}}, {{paid}}, {{balance}}, {{agentName}}, {{agentEmail}}, {{appName}}, {{today}}.</p>
+            <div class="toolbar" style="margin:16px 0"><button class="btn btn-primary" type="submit" data-i18n>Save template</button><button id="templateReset" class="btn btn-secondary" type="button" data-i18n>Clear</button></div>
+          </form>
+          <div id="templateList" class="list"></div>
         </article>
       </section>
 
@@ -230,6 +250,7 @@
       if(action.dataset.action==='edit-payment')editPayment(action.dataset.id);
       if(action.dataset.action==='cancel-payment')cancelPaymentUi(action.dataset.id);
       if(action.dataset.action==='edit-user')editUser(action.dataset.email);
+      if(action.dataset.action==='edit-template')editTemplate(action.dataset.id);
     });
     window.addEventListener('beforeunload',function(event){if(state.dirty){event.preventDefault();event.returnValue='';}});
 
@@ -246,6 +267,8 @@
       document.getElementById('exportBalances').addEventListener('click',exportBalancesCsv);
       document.getElementById('userForm').addEventListener('submit',saveUserUi);
       document.getElementById('userReset').addEventListener('click',resetUserForm);
+      document.getElementById('templateForm').addEventListener('submit',saveTemplateUi);
+      document.getElementById('templateReset').addEventListener('click',resetTemplateForm);
       document.getElementById('cancelForm').addEventListener('submit',confirmCancelPaymentUi);
       document.getElementById('cancelClose').addEventListener('click',function(){document.getElementById('cancelDialog').close();});
       if(!state.token){showLogin();return;}
@@ -263,6 +286,7 @@
         document.getElementById('userName').textContent=state.bootstrap.user.displayName;
         document.getElementById('userRole').textContent=state.bootstrap.user.role+' · v'+state.bootstrap.version;
         document.getElementById('usersNav').hidden=!state.bootstrap.capabilities.manageUsers;
+        document.getElementById('templatesNav').hidden=!state.bootstrap.capabilities.manageUsers;
         document.getElementById('statusFilter').innerHTML='<option value="">All statuses</option>'+
           state.bootstrap.options.STATUSES.map(function(status){return '<option value="'+esc(status)+'">'+esc(label(status))+'</option>';}).join('');
         await Promise.all([loadDashboard(),search()]);
@@ -482,6 +506,9 @@
         : '';
       var hero=lead?'<div class="profile-hero"><small>'+esc(lead.id)+'</small><h2>'+esc(lead.name)+'</h2></div>':'';
       var payments=lead?renderPayments(lead):'';
+      var templatesSection=lead?'<article class="card section"><div class="section-head"><div><h2>'+esc(t('Quote and email templates'))+'</h2><p>'+esc(t("Render reusable text with this lead's current data."))+'</p></div></div>'+
+        '<div class="toolbar"><select id="templatePicker" class="select" style="max-width:320px"></select><button id="templatePreviewButton" class="btn btn-secondary" type="button">'+esc(t('Preview'))+'</button></div>'+
+        '<div id="templatePreview" style="margin-top:14px"></div></article>':'';
       document.getElementById('editorContent').innerHTML=hero+
         '<article class="card section"><div class="section-head"><div><h2>'+esc(t(lead?'Edit lead':'Create lead'))+'</h2><p>'+esc(t('Customer, trip and commercial details.'))+'</p></div></div>'+
         '<form id="leadForm"><div class="form-grid">'+
@@ -504,9 +531,14 @@
         field('Next follow-up',dateInput('nextFollowUp',lead&&lead.nextFollowUp))+
         field('Next action',input('nextAction',lead&&lead.nextAction,'E.g. Send quote'))+
         field('Notes','<textarea id="notes" class="textarea">'+esc(lead&&lead.notes||'')+'</textarea>','full')+
-        '</div><div class="toolbar" style="margin-top:18px"><button class="btn btn-primary" type="submit">'+esc(t('Save lead'))+'</button><button class="btn btn-secondary" type="button" data-view="leads">'+esc(t('Back'))+'</button></div></form></article>'+payments;
+        '</div><div class="toolbar" style="margin-top:18px"><button class="btn btn-primary" type="submit">'+esc(t('Save lead'))+'</button><button class="btn btn-secondary" type="button" data-view="leads">'+esc(t('Back'))+'</button></div></form></article>'+payments+templatesSection;
       document.getElementById('leadForm').addEventListener('submit',saveLeadUi);
       document.getElementById('leadForm').addEventListener('input',function(){state.dirty=true;});
+      var templatePreviewButton=document.getElementById('templatePreviewButton');
+      if(templatePreviewButton){
+        populateTemplatePicker();
+        templatePreviewButton.addEventListener('click',function(){previewTemplateUi(lead.id);});
+      }
       var paymentForm=document.getElementById('paymentForm');
       if(paymentForm)paymentForm.addEventListener('submit',savePaymentUi);
       var paymentReset=document.getElementById('paymentReset');
@@ -614,15 +646,87 @@
       finally{setFormBusy(event.currentTarget,false);}
     }
 
+    async function populateTemplatePicker(){
+      try{
+        var templates=await api('listTemplates');
+        var select=document.getElementById('templatePicker');
+        if(!select)return;
+        select.innerHTML=templates.length?templates.map(function(tpl){
+          return '<option value="'+esc(tpl.id)+'">'+esc(tpl.name)+' · '+esc(label(tpl.type))+'</option>';
+        }).join(''):'<option value="">'+esc(t('No templates available.'))+'</option>';
+      }catch(error){showMessage(errorText(error),true);}
+    }
+
+    async function previewTemplateUi(leadId){
+      var select=document.getElementById('templatePicker');
+      if(!select||!select.value){showMessage(t('No templates available.'),true);return;}
+      try{
+        var rendered=await api('renderLeadTemplate',leadId,select.value);
+        var mailLink=rendered.subject?'<a class="btn btn-secondary" href="mailto:?subject='+encodeURIComponent(rendered.subject)+'&body='+encodeURIComponent(rendered.body)+'" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">'+esc(t('Open in email client'))+'</a>':'';
+        document.getElementById('templatePreview').innerHTML=
+          (rendered.subject?field('Subject','<input class="input" id="templatePreviewSubject" readonly value="'+esc(rendered.subject)+'">'):'')+
+          field('Body','<textarea class="textarea" id="templatePreviewBody" readonly style="min-height:160px">'+esc(rendered.body)+'</textarea>')+
+          '<div class="toolbar"><button class="btn btn-secondary" type="button" id="templateCopyButton">'+esc(t('Copy'))+'</button>'+mailLink+'</div>';
+        document.getElementById('templateCopyButton').addEventListener('click',function(){copyTemplatePreview(rendered);});
+      }catch(error){showMessage(errorText(error),true);}
+    }
+
+    function copyTemplatePreview(rendered){
+      var text=(rendered.subject?rendered.subject+'\n\n':'')+rendered.body;
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(
+          function(){showMessage(t('Copied to clipboard.'),false);},
+          function(){showMessage(t('Could not copy automatically. Select and copy the text.'),true);}
+        );
+      }else{
+        showMessage(t('Could not copy automatically. Select and copy the text.'),true);
+      }
+    }
+
+    async function loadTemplateAdmin(){
+      if(!state.bootstrap.capabilities.manageUsers)return;
+      state.templates=await api('listTemplates');
+      document.getElementById('templateList').innerHTML=state.templates.length?state.templates.map(function(tpl){
+        return '<article class="user-row"><div><strong>'+esc(tpl.name)+'</strong><small>'+esc(tpl.id)+'</small></div>'+
+          '<div><span class="badge">'+esc(label(tpl.type))+'</span></div>'+
+          '<div><span class="badge" data-active="'+esc(tpl.active)+'">'+esc(t(tpl.active?'Active':'Disabled'))+'</span></div>'+
+          '<button class="btn btn-secondary" type="button" data-action="edit-template" data-id="'+esc(tpl.id)+'">'+esc(t('Edit'))+'</button></article>';
+      }).join(''):'<div class="empty">'+esc(t('No templates found.'))+'</div>';
+    }
+
+    function editTemplate(id){
+      var tpl=(state.templates||[]).find(function(item){return item.id===id;});
+      if(!tpl)return;
+      setValue('templateId',tpl.id);setValue('templateName',tpl.name);
+      setValue('templateType',tpl.type);setValue('templateActive',String(tpl.active));
+      setValue('templateSubject',tpl.subject);setValue('templateBody',tpl.body);
+      document.getElementById('templateName').focus();
+    }
+
+    function resetTemplateForm(){
+      setValue('templateId','');setValue('templateName','');setValue('templateSubject','');setValue('templateBody','');
+      setValue('templateType','QUOTE');setValue('templateActive','true');
+    }
+
+    async function saveTemplateUi(event){
+      event.preventDefault();setFormBusy(event.currentTarget,true);
+      try{
+        await api('saveTemplate',{id:value('templateId'),name:value('templateName'),type:value('templateType'),subject:value('templateSubject'),body:value('templateBody'),active:value('templateActive')==='true'});
+        resetTemplateForm();await loadTemplateAdmin();showMessage(t('Template saved.'),false);
+      }catch(error){showMessage(errorText(error),true);}
+      finally{setFormBusy(event.currentTarget,false);}
+    }
+
     function resetPayment(){['paymentId','paymentAmount','paymentReference','paymentNotes'].forEach(function(id){setValue(id,'');});setValue('paymentDate',state.bootstrap.today);setValue('paymentMethod','BANK_TRANSFER');document.getElementById('paymentSubmit').textContent=t('Add payment');}
     function showView(id){
       if(state.dirty&&id!=='editor'&&!window.confirm(t('Discard unsaved lead changes?')))return;
       if(id!=='editor')state.dirty=false;
       document.querySelectorAll('.view').forEach(function(view){view.classList.toggle('active',view.id===id);});
       document.querySelectorAll('nav [data-view]').forEach(function(button){button.classList.toggle('active',button.dataset.view===id);});
-      var titles={dashboard:'Sales overview',leads:'Lead directory',followups:'Follow-up queue',balances:'Outstanding balances',editor:'Customer file',users:'User access'};
+      var titles={dashboard:'Sales overview',leads:'Lead directory',followups:'Follow-up queue',balances:'Outstanding balances',editor:'Customer file',users:'User access',templates:'Quote and email templates'};
       document.getElementById('pageTitle').textContent=titles[id]?t(titles[id]):(state.bootstrap.configuration.appName||'Open Travel CRM');
       if(id==='users')loadUsers().catch(function(error){showMessage(errorText(error),true);});
+      if(id==='templates')loadTemplateAdmin().catch(function(error){showMessage(errorText(error),true);});
       if(id==='followups')loadFollowUps().catch(function(error){showMessage(errorText(error),true);});
       if(id==='balances')loadBalances().catch(function(error){showMessage(errorText(error),true);});
     }

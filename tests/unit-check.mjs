@@ -31,6 +31,7 @@ for (const file of [
   'AuthService.gs',
   'LeadsService.gs',
   'PaymentsService.gs',
+  'TemplatesService.gs',
   'AdminService.gs',
   'Setup.gs'
 ]) {
@@ -192,6 +193,32 @@ runtimeProperties.TRAVEL_CRM_CURRENCY = 'USD';
 runtimeProperties.TRAVEL_CRM_ENVIRONMENT = 'preview';
 run('otcRuntimeConfigCache_ = null');
 throws('getRuntimeConfig_()', /production, staging or demo/);
+
+runtimeProperties.TRAVEL_CRM_ENVIRONMENT = 'production';
+run('otcRuntimeConfigCache_ = null');
+assert.equal(run('formatMoney_(1234.5)'), '$1,234.50');
+// A blank or non-finite amount is not the same as a zero amount.
+assert.equal(run('formatMoney_("")'), '');
+assert.equal(run('formatMoney_(null)'), '');
+assert.equal(run('formatMoney_(undefined)'), '');
+assert.equal(run('formatMoney_(NaN)'), '');
+assert.equal(run('formatMoney_(0)'), '$0.00');
+
+assert.equal(
+  run("renderTemplateText_('Hi {{name}}, total {{total}}.', {name: 'Ana', total: '$10'})"),
+  'Hi Ana, total $10.'
+);
+// An unknown token is left visible so a typo is noticed, not silently erased.
+assert.equal(
+  run("renderTemplateText_('Hi {{missing}}.', {name: 'Ana'})"),
+  'Hi {{missing}}.'
+);
+assert.equal(run("renderTemplateText_('', {name: 'Ana'})"), '');
+assert.equal(
+  run("renderTemplateText_('{{ name }}', {name: 'Ana'})"),
+  'Ana',
+  'Whitespace inside the braces is tolerated.'
+);
 
 console.log('✓ Currency parsing is international, bounded and rejects malformed input.');
 console.log('✓ Dates reject rollover and ambiguous formats.');

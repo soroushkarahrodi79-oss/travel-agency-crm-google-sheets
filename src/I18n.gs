@@ -35,6 +35,9 @@ const OTC_MESSAGES = Object.freeze({
 
     // Lead and reservation errors.
     'Lead not found.': 'Lead no encontrado.',
+    'Template not found.': 'Plantilla no encontrada.',
+    'Template name is required.': 'El nombre de la plantilla es obligatorio.',
+    'Template body is required.': 'El contenido de la plantilla es obligatorio.',
     'This lead belongs to another agent.': 'Este lead pertenece a otro agente.',
     'Name is required.': 'El nombre es obligatorio.',
     'Phone must contain at least seven digits.':
@@ -86,6 +89,7 @@ const OTC_MESSAGES = Object.freeze({
     'Dashboard': 'Panel',
     'Follow-ups': 'Seguimientos',
     'New lead': 'Nuevo lead',
+    'Templates': 'Plantillas',
     'Users': 'Usuarios',
     'Sign out': 'Cerrar sesión',
     'Open-source sample · No customer data is bundled.':
@@ -222,6 +226,29 @@ const OTC_MESSAGES = Object.freeze({
     'Days to travel': 'Días hasta el viaje',
     'Last payment': 'Último pago',
     'Aging bucket': 'Tramo de antigüedad',
+
+    // Quote and email templates.
+    'Quote and email templates': 'Plantillas de presupuesto y correo',
+    'Reusable text agents can render onto any lead.':
+      'Texto reutilizable que los agentes pueden aplicar a cualquier lead.',
+    "Render reusable text with this lead's current data.":
+      'Genera texto reutilizable con los datos actuales de este lead.',
+    'Template type': 'Tipo de plantilla',
+    'Quote': 'Presupuesto',
+    'Save template': 'Guardar plantilla',
+    'Template saved.': 'Plantilla guardada.',
+    'No templates found.': 'No se han encontrado plantillas.',
+    'No templates available.': 'No hay plantillas disponibles.',
+    'Preview': 'Vista previa',
+    'Subject': 'Asunto',
+    'Body': 'Contenido',
+    'Copy': 'Copiar',
+    'Open in email client': 'Abrir en el cliente de correo',
+    'Copied to clipboard.': 'Copiado al portapapeles.',
+    'Could not copy automatically. Select and copy the text.':
+      'No se pudo copiar automáticamente. Selecciona y copia el texto.',
+    'Placeholders: {{name}}, {{phone}}, {{destination}}, {{service}}, {{travelStart}}, {{travelEnd}}, {{passengers}}, {{nextAction}}, {{budget}}, {{saleAmount}}, {{total}}, {{paid}}, {{balance}}, {{agentName}}, {{agentEmail}}, {{appName}}, {{today}}.':
+      'Marcadores: {{name}}, {{phone}}, {{destination}}, {{service}}, {{travelStart}}, {{travelEnd}}, {{passengers}}, {{nextAction}}, {{budget}}, {{saleAmount}}, {{total}}, {{paid}}, {{balance}}, {{agentName}}, {{agentEmail}}, {{appName}}, {{today}}.',
 
     // User administration.
     'User access': 'Acceso de usuarios',
