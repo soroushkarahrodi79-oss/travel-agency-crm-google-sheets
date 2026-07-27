@@ -4,7 +4,7 @@
  */
 const OTC = Object.freeze({
   VERSION: '1.2.0',
-  SCHEMA_VERSION: 1,
+  SCHEMA_VERSION: 2,
   PROPERTY_SPREADSHEET_ID: 'TRAVEL_CRM_SPREADSHEET_ID',
   PROPERTY_ADMIN_EMAIL: 'TRAVEL_CRM_ADMIN_EMAIL',
   PROPERTIES: Object.freeze({
@@ -31,7 +31,10 @@ const OTC = Object.freeze({
     FOLLOW_UP_WINDOW_DAYS: 7,
     AGING_SOON_DAYS: 7,
     AGING_NEAR_DAYS: 30,
-    MAX_REPORT_ROWS: 500
+    MAX_REPORT_ROWS: 500,
+    MAX_TEMPLATE_NAME: 120,
+    MAX_TEMPLATE_SUBJECT: 200,
+    MAX_TEMPLATE_BODY: 4000
   }),
   AUTH: Object.freeze({
     SECRET_PROPERTY: 'TRAVEL_CRM_AUTH_SECRET',
@@ -50,7 +53,8 @@ const OTC = Object.freeze({
     RESERVATIONS: 'RESERVATIONS',
     PAYMENTS: 'PAYMENTS',
     USERS: 'USERS',
-    AUDIT: 'AUDIT_LOG'
+    AUDIT: 'AUDIT_LOG',
+    TEMPLATES: 'TEMPLATES'
   }),
   HEADERS: Object.freeze({
     LEADS: [
@@ -69,7 +73,11 @@ const OTC = Object.freeze({
       'Updated by', 'Cancellation reason'
     ],
     USERS: ['Email', 'Display name', 'Role', 'Active', 'Created at'],
-    AUDIT: ['At', 'User email', 'Action', 'Entity type', 'Entity ID', 'Details']
+    AUDIT: ['At', 'User email', 'Action', 'Entity type', 'Entity ID', 'Details'],
+    TEMPLATES: [
+      'Template ID', 'Name', 'Type', 'Subject', 'Body', 'Active',
+      'Updated at', 'Updated by'
+    ]
   }),
   OPTIONS: Object.freeze({
     ROLES: ['ADMIN', 'AGENT'],
@@ -84,7 +92,8 @@ const OTC = Object.freeze({
     // Ordered from most to least urgent; the report relies on this order.
     AGING_BUCKETS: [
       'OVERDUE', 'DUE_SOON', 'DUE_LATER', 'SCHEDULED', 'NO_TRAVEL_DATE'
-    ]
+    ],
+    TEMPLATE_TYPES: ['QUOTE', 'EMAIL']
   })
 });
 
@@ -224,6 +233,28 @@ function money_(value) {
     text = text.replace(/\./g, '');
   }
   return Number(text);
+}
+
+/**
+ * Formats an amount using the deployment's currency and locale, matching the
+ * browser's formatMoney(). Used where rendered text (templates) leaves the
+ * server and cannot rely on client-side Intl formatting. A blank or
+ * non-finite amount returns an empty string rather than "0.00", since a lead
+ * without a budget is not the same as a lead with a zero budget.
+ */
+function formatMoney_(amount) {
+  if (amount === '' || amount === null || amount === undefined) return '';
+  const number = Number(amount);
+  if (!Number.isFinite(number)) return '';
+  const runtime = getRuntimeConfig_();
+  try {
+    return new Intl.NumberFormat(runtime.locale, {
+      style: 'currency',
+      currency: runtime.currency
+    }).format(number);
+  } catch (error) {
+    return runtime.currency + ' ' + number.toFixed(2);
+  }
 }
 
 function dateFromInput_(value) {

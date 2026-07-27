@@ -80,6 +80,7 @@ function setupTravelCrm_() {
   ensureSheet_(spreadsheet, OTC.SHEETS.PAYMENTS, OTC.HEADERS.PAYMENTS);
   ensureSheet_(spreadsheet, OTC.SHEETS.USERS, OTC.HEADERS.USERS);
   ensureSheet_(spreadsheet, OTC.SHEETS.AUDIT, OTC.HEADERS.AUDIT);
+  ensureSheet_(spreadsheet, OTC.SHEETS.TEMPLATES, OTC.HEADERS.TEMPLATES);
   applySheetFormats_(spreadsheet);
   spreadsheet.setSpreadsheetTimeZone(runtime.timeZone);
 
@@ -181,6 +182,7 @@ function applySheetFormats_(spreadsheet) {
   const reservations = spreadsheet.getSheetByName(OTC.SHEETS.RESERVATIONS);
   const payments = spreadsheet.getSheetByName(OTC.SHEETS.PAYMENTS);
   const users = spreadsheet.getSheetByName(OTC.SHEETS.USERS);
+  const templates = spreadsheet.getSheetByName(OTC.SHEETS.TEMPLATES);
 
   leads.getRange('J2:K').setNumberFormat('#,##0.00');
   leads.getRange('L2:M').setNumberFormat('dd/MM/yyyy');
@@ -189,6 +191,7 @@ function applySheetFormats_(spreadsheet) {
   payments.getRange('C2:C').setNumberFormat('dd/MM/yyyy');
   payments.getRange('D2:D').setNumberFormat('#,##0.00');
   users.getRange('D2:D').insertCheckboxes();
+  templates.getRange('F2:F').insertCheckboxes();
 
   applyListValidation_(leads.getRange('G2:G'), OTC.OPTIONS.STATUSES);
   applyListValidation_(leads.getRange('H2:H'), OTC.OPTIONS.SERVICES);
@@ -196,8 +199,9 @@ function applySheetFormats_(spreadsheet) {
   applyListValidation_(users.getRange('C2:C'), OTC.OPTIONS.ROLES);
   applyListValidation_(payments.getRange('E2:E'), OTC.OPTIONS.PAYMENT_METHODS);
   applyListValidation_(payments.getRange('H2:H'), ['ACTIVE', 'CANCELLED']);
+  applyListValidation_(templates.getRange('C2:C'), OTC.OPTIONS.TEMPLATE_TYPES);
 
-  [leads, reservations, payments, users].forEach(function(sheet) {
+  [leads, reservations, payments, users, templates].forEach(function(sheet) {
     sheet.autoResizeColumns(1, Math.min(sheet.getLastColumn(), 18));
     sheet.setColumnWidths(1, sheet.getLastColumn(), 145);
   });
@@ -332,7 +336,8 @@ function buildHealthReport_(spreadsheet) {
     OTC.SHEETS.LEADS,
     OTC.SHEETS.RESERVATIONS,
     OTC.SHEETS.PAYMENTS,
-    OTC.SHEETS.USERS
+    OTC.SHEETS.USERS,
+    OTC.SHEETS.TEMPLATES
   ].forEach(function(name) {
     const sheet = spreadsheet.getSheetByName(name);
     const duplicates = sheet ? countDuplicateKeys_(sheet, 1) : 0;

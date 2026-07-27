@@ -34,6 +34,15 @@ In the Apps Script editor:
 `setupTravelCrm_()` is idempotent for compatible schemas. It does not silently
 reorder or replace unexpected headers.
 
+## Release-specific migration notes
+
+### Schema 2 (quote and email templates)
+
+Adds a `TEMPLATES` sheet. `setupTravelCrm_()` creates it automatically on the
+next run; no manual column changes or data migration are required. Existing
+`LEADS`, `RESERVATIONS`, `PAYMENTS`, `USERS` and `AUDIT_LOG` headers are
+unchanged.
+
 ## Schema mismatch
 
 Do not rename columns until the error disappears. A mismatch may indicate:

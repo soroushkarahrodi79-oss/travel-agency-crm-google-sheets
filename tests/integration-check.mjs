@@ -8,7 +8,7 @@ import {fileURLToPath} from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const properties = {
   TRAVEL_CRM_SPREADSHEET_ID: 'TEST_SPREADSHEET_ID_1234567890',
-  TRAVEL_CRM_SCHEMA_VERSION: '1',
+  TRAVEL_CRM_SCHEMA_VERSION: '2',
   TRAVEL_CRM_AUTH_SECRET: 'integration-test-secret',
   TRAVEL_CRM_ENVIRONMENT: 'staging',
   TRAVEL_CRM_STAGING_TOKEN: 'integration-staging-token-1234567890'
@@ -34,7 +34,11 @@ const headers = {
     'Updated by', 'Cancellation reason'
   ],
   USERS: ['Email', 'Display name', 'Role', 'Active', 'Created at'],
-  AUDIT_LOG: ['At', 'User email', 'Action', 'Entity type', 'Entity ID', 'Details']
+  AUDIT_LOG: ['At', 'User email', 'Action', 'Entity type', 'Entity ID', 'Details'],
+  TEMPLATES: [
+    'Template ID', 'Name', 'Type', 'Subject', 'Body', 'Active',
+    'Updated at', 'Updated by'
+  ]
 };
 
 class MockTextFinder {
@@ -244,7 +248,8 @@ const sheets = {
   USERS: new MockSheet('USERS', headers.USERS, [[
     'admin@example.com', 'Admin User', 'ADMIN', true, new Date()
   ]]),
-  AUDIT_LOG: new MockSheet('AUDIT_LOG', headers.AUDIT_LOG)
+  AUDIT_LOG: new MockSheet('AUDIT_LOG', headers.AUDIT_LOG),
+  TEMPLATES: new MockSheet('TEMPLATES', headers.TEMPLATES)
 };
 
 let spreadsheetTimeZone = 'Europe/Madrid';
@@ -382,6 +387,7 @@ for (const file of [
   'ReservationsService.gs',
   'PaymentsService.gs',
   'LeadsService.gs',
+  'TemplatesService.gs',
   'AdminService.gs',
   'Setup.gs',
   'WebApp.gs'
@@ -772,6 +778,81 @@ assert.throws(
   /Lead not found/
 );
 
+// Templates: administrator-managed, agent-rendered against their own leads.
+assert.throws(
+  () => call('saveTemplate', queueSession.token, {name: 'Blocked', body: 'x'}),
+  /permission/
+);
+const quoteTemplate = plain(call('saveTemplate', adminSession.token, {
+  name: 'Standard quote',
+  type: 'QUOTE',
+  subject: 'Your {{destination}} quote',
+  body: 'Hi {{name}}, your trip to {{destination}} totals {{total}} with ' +
+    '{{balance}} outstanding. Unknown token: {{doesNotExist}}.'
+})).template;
+assert.equal(quoteTemplate.id, 'TPL-0001');
+assert.equal(quoteTemplate.active, true);
+const draftTemplate = plain(call('saveTemplate', adminSession.token, {
+  name: 'Draft template',
+  type: 'EMAIL',
+  body: 'Draft body',
+  active: false
+})).template;
+
+assert.deepEqual(
+  plain(call('listTemplates', adminSession.token)).map((tpl) => tpl.id),
+  ['TPL-0002', 'TPL-0001'],
+  'Administrators see every template, sorted by name.'
+);
+assert.deepEqual(
+  plain(call('listTemplates', reportSession.token)).map((tpl) => tpl.id),
+  ['TPL-0001'],
+  'Agents never see an inactive template.'
+);
+
+const rendered = plain(call(
+  'renderLeadTemplate', reportSession.token, soonLead.id, quoteTemplate.id
+));
+assert.equal(rendered.subject, 'Your Lima quote');
+assert.match(rendered.body, /^Hi Report Soon, your trip to Lima totals/);
+// A balance of 600 in EUR renders with the deployment's currency formatting.
+assert.match(rendered.body, /600/);
+// An unrecognised placeholder is left visible rather than silently erased.
+assert.match(rendered.body, /Unknown token: \{\{doesNotExist\}\}\./);
+
+assert.throws(
+  () => call('renderLeadTemplate', reportSession.token, adminLead.id, quoteTemplate.id),
+  /belongs to another agent/,
+  'Rendering must respect the same ownership as opening the lead.'
+);
+assert.throws(
+  () => call('renderLeadTemplate', reportSession.token, soonLead.id, draftTemplate.id),
+  /Template not found/,
+  'An agent cannot render an inactive template.'
+);
+assert.equal(
+  plain(call('renderLeadTemplate', adminSession.token, soonLead.id, draftTemplate.id)).body,
+  'Draft body',
+  'An administrator can still render an inactive template.'
+);
+assert.throws(
+  () => call('saveTemplate', adminSession.token, {name: '', body: 'x'}),
+  /name is required/
+);
+assert.throws(
+  () => call('saveTemplate', adminSession.token, {name: 'No body', body: ''}),
+  /body is required/
+);
+// Updating an existing template keeps its ID rather than minting a new one.
+const updatedTemplate = plain(call('saveTemplate', adminSession.token, {
+  id: quoteTemplate.id,
+  name: 'Standard quote (revised)',
+  type: 'QUOTE',
+  body: 'Revised body for {{name}}.'
+})).template;
+assert.equal(updatedTemplate.id, quoteTemplate.id);
+assert.equal(updatedTemplate.name, 'Standard quote (revised)');
+
 const health = plain(call('runHealthCheck_'));
 assert.equal(health.ok, true);
 const remoteAcceptance = plain(call(
@@ -813,6 +894,7 @@ console.log('✓ Payments, overpayment guards, cancellations and status sync are
 console.log('✓ Access changes invalidate sessions and retain auditable history.');
 console.log('✓ Follow-up queue scopes, ordering and ownership are correct.');
 console.log('✓ Outstanding balances are aged, ranked, scoped and exclude settled leads.');
+console.log('✓ Templates are administrator-managed, ownership-scoped and render unknown tokens visibly.');
 console.log('✓ Locale switching translates agent errors and spares operator diagnostics.');
 console.log('✓ Operational health checks pass on a consistent installation.');
 console.log('✓ One-step setup can create and return a native spreadsheet.');

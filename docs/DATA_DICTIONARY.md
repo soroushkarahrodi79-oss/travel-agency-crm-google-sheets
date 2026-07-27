@@ -85,6 +85,31 @@ One retained row per CRM identity.
 Disabling a user or changing its role invalidates existing sessions. The system
 refuses to remove the final active administrator.
 
+## TEMPLATES
+
+Reusable quote and customer-email text, shared across the agency.
+
+| Column | Type | Meaning |
+| --- | --- | --- |
+| Template ID | Text, primary key | Generated `TPL-NNNN` identifier |
+| Name | Text | Short label shown in the picker |
+| Type | Enum | `QUOTE` or `EMAIL` |
+| Subject | Text | Used when rendering an `EMAIL` template |
+| Body | Text | Template text; supports `{{placeholder}}` tokens |
+| Active | Boolean | Whether agents can select it |
+| Updated at | Date-time | Last edit timestamp |
+| Updated by | Email | Administrator responsible for the latest edit |
+
+A template is disabled rather than deleted, mirroring `USERS`, so a past render
+stays explainable. Only an administrator can create, edit or disable a
+template; any agent can render an active one against their own leads.
+
+Placeholders are resolved server side against the rendering lead: `name`,
+`phone`, `destination`, `service`, `travelStart`, `travelEnd`, `passengers`,
+`nextAction`, `budget`, `saleAmount`, `total`, `paid`, `balance`, `agentName`,
+`agentEmail`, `appName`, `today`. An unrecognised token is left in the
+rendered text unchanged, so a typo is visible rather than silently dropped.
+
 ## AUDIT_LOG
 
 Append-oriented record of security and domain mutations.

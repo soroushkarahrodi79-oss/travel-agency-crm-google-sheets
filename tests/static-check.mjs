@@ -64,7 +64,8 @@ const allSource = gsFiles
 for (const name of [
   'requestAccessCode', 'verifyAccessCode', 'signOut', 'getBootstrap',
   'getDashboard', 'searchLeads', 'getFollowUpQueue', 'getOutstandingReport',
-  'getLead', 'saveLead', 'savePayment', 'cancelPayment', 'listUsers', 'saveUser'
+  'getLead', 'saveLead', 'savePayment', 'cancelPayment', 'listUsers', 'saveUser',
+  'listTemplates', 'saveTemplate', 'renderLeadTemplate'
 ]) {
   check(
     new RegExp(`function\\s+${name}\\s*\\(`).test(allSource),
@@ -139,6 +140,15 @@ check(
     indexHtml.includes('function csvCell(') &&
     indexHtml.includes("/^[=+\\-@\\t\\r]/"),
   'balance report ages against departure and neutralises CSV formulas'
+);
+check(
+  allSource.includes("function saveTemplate(token, input)") &&
+    allSource.includes("requireUser_(token, ['ADMIN'])") &&
+    allSource.includes('function renderTemplateText_(') &&
+    allSource.includes('function templateContext_(') &&
+    allSource.includes('assertLeadAccess_') &&
+    allSource.includes('TEMPLATE_TYPES'),
+  'templates are administrator-managed and rendered through lead ownership'
 );
 check(
   allSource.includes("function cellText_(") &&

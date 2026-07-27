@@ -8,6 +8,10 @@ versioning.
 
 ### Added
 
+- Reusable quote and customer-email templates with `{{placeholder}}`
+  substitution against a lead's current data, administrator-managed and
+  agent-rendered within their own leads. Adds a `TEMPLATES` sheet (schema
+  version 2; `setupTravelCrm_()` creates it automatically).
 - Outstanding-balance and payment-aging report, aged against each departure
   date rather than debt age, with per-bucket totals, urgency ordering and a
   CSV export whose cells are neutralised against spreadsheet formula injection.
