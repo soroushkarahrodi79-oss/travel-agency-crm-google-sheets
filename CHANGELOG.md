@@ -4,40 +4,66 @@ All notable changes follow the principles of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and semantic
 versioning.
 
-## [Unreleased]
+## [1.3.0] - 2026-07-28
 
-### Added
+Completes the roadmap's *Next: daily agency workflow* section. Every feature
+below is exclusive to `AGENT`/`ADMIN` sessions, respects the existing lead
+ownership rules and ships behind the same static, unit and integration gates.
 
-- Calendar follow-up events synced from each lead's Next follow-up date, one
-  event per lead and idempotent: running sync twice never duplicates, changing
-  the date moves the event and closing or losing the lead deletes it. Adds a
-  `CALENDAR_EVENTS` sheet (schema version 4) and the narrow
-  `calendar.events.owned` OAuth scope, which only grants access to events the
-  CRM itself creates.
-- A private Google Drive folder per lead for quotes, tickets and scanned
-  documents, created on request and linked from the lead editor. Adds a
-  `DRIVE_LINKS` sheet (schema version 3) and the narrow `drive.file` OAuth
-  scope, which only grants access to folders the CRM itself creates; the CRM
-  never lists or reads a lead folder's contents.
-- Reusable quote and customer-email templates with `{{placeholder}}`
+### Added — daily workflow features
+
+- **Follow-up work queue** with `OVERDUE`, `TODAY` and next-seven-day scopes,
+  ordered by urgency and reachable from a navigation entry that shows the
+  overdue count. Reuses the existing `Next follow-up` column, so no schema
+  change is required.
+- **Outstanding-balance and payment-aging report**, aged against each
+  departure date rather than debt age, with per-bucket totals, urgency
+  ordering and a CSV export whose cells are neutralised against spreadsheet
+  formula injection.
+- **Reusable quote and customer-email templates** with `{{placeholder}}`
   substitution against a lead's current data, administrator-managed and
-  agent-rendered within their own leads. Adds a `TEMPLATES` sheet (schema
-  version 2; `setupTravelCrm_()` creates it automatically).
-- Outstanding-balance and payment-aging report, aged against each departure
-  date rather than debt age, with per-bucket totals, urgency ordering and a
-  CSV export whose cells are neutralised against spreadsheet formula injection.
-- Spanish interface and error messages, selected by `TRAVEL_CRM_LOCALE`. The
-  message catalogue lives in `src/I18n.gs`, ships with the first paint so the
-  sign-in screen is already translated, and falls back to English for any
-  locale without a catalogue. Operator diagnostics stay in English so
-  deployment logs and CI output keep one wording.
-- A release gate that fails the build when a user-facing string has no Spanish
-  translation, so the catalogue cannot fall behind the interface.
+  agent-rendered within their own leads. The CRM renders the text; sending
+  stays in the agent's own mail client so the app never dispatches messages
+  on the agency's behalf.
+- **A private Google Drive folder per lead** for quotes, tickets and scanned
+  documents, created on request and linked from the lead editor. The CRM
+  only stores the folder link and never enumerates or reads its contents.
+- **Idempotent calendar sync**: one CRM-owned event per lead, kept in sync
+  with the *Next follow-up* date — no-op when nothing changed, moved when the
+  date changes, deleted when the lead is closed or lost.
+- **Full Spanish localization** of the interface and errors, selected by
+  `TRAVEL_CRM_LOCALE`. Falls back to English for any locale without a
+  catalogue; operator diagnostics stay in English so deployment logs, CI
+  output and runbooks keep one greppable wording.
 
-- Follow-up work queue with overdue, today and next-seven-day scopes, ordered
-  by urgency and reachable from a navigation entry that shows the overdue
-  count. It reuses the existing `Next follow-up` column, so no schema change
-  or migration is required.
+### Changed
+
+- Schema version bumped from **1** to **4** across four incremental steps
+  (`TEMPLATES`, `DRIVE_LINKS`, `CALENDAR_EVENTS`). `setupTravelCrm_()` creates
+  the new sheets automatically on the next run; see
+  [`docs/UPGRADING.md`](docs/UPGRADING.md) for the per-schema notes.
+- OAuth scopes now include `drive.file` and `calendar.events.owned` — the
+  narrowest grants available. Both only cover items the app itself creates;
+  the deployer's wider Drive and Calendar contents stay invisible to the CRM.
+  Re-authorization is required on the next `setupTravelCrm_()` run.
+- Reworked payment aggregation into a single
+  `activePaymentAggregatesByLead_` pass shared between the dashboard and the
+  balance report, replacing two near-identical scans.
+
+### Added — release gates
+
+Because features that grow over time need gates that grow with them:
+
+- **Translation coverage gate** that fails the build when a user-facing
+  string has no Spanish translation, so the catalogue cannot silently fall
+  behind the interface.
+- **OAuth scope gate** tightened to require the exact scope list rather than
+  a subset, so any future scope creep must go through a deliberate manifest
+  and gate change.
+- **Third-party read prohibitions**: static gates fail the build if
+  `getFiles()` / `getFolders()` (Drive) or `getEvents()` /
+  `getAllCalendars()` (Calendar) ever appear in the source, keeping the
+  narrow-scope design load-bearing.
 
 ## [1.2.0] - 2026-07-26
 

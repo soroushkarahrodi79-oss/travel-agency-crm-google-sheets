@@ -13,7 +13,7 @@
   [Español](README.es.md)
 
   [![CI](https://github.com/soroushkarahrodi79-oss/travel-agency-crm-google-sheets/actions/workflows/ci.yml/badge.svg)](https://github.com/soroushkarahrodi79-oss/travel-agency-crm-google-sheets/actions/workflows/ci.yml)
-  [![Release](https://img.shields.io/badge/release-v1.2.0-2667e8.svg)](CHANGELOG.md)
+  [![Release](https://img.shields.io/badge/release-v1.3.0-2667e8.svg)](CHANGELOG.md)
   [![License: MIT](https://img.shields.io/badge/license-MIT-f28c28.svg)](LICENSE)
   [![Runtime dependencies](https://img.shields.io/badge/runtime_dependencies-0-15805d.svg)](package.json)
   [![PRs welcome](https://img.shields.io/badge/PRs-welcome-1f6feb.svg)](CONTRIBUTING.md)
@@ -194,7 +194,7 @@ package version, for example `v1.1.0`.
 
 ## Project status
 
-Version `1.2.0` is a production-minded reference implementation for small
+Version `1.3.0` is a production-minded reference implementation for small
 teams. Google Sheets and Apps Script have quotas and practical scale limits; the
 [operations guide](docs/OPERATIONS.md) explains when to consider a database-backed
 system.
