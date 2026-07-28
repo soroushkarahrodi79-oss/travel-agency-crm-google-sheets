@@ -511,6 +511,8 @@
         '<div id="templatePreview" style="margin-top:14px"></div></article>':'';
       var documentsSection=lead?'<article class="card section"><div class="section-head"><div><h2>'+esc(t('Documents'))+'</h2><p>'+esc(t('A private Drive folder to store quotes, tickets and scanned documents for this lead.'))+'</p></div></div>'+
         '<div id="documentsLink">'+esc(t('Loading…'))+'</div></article>':'';
+      var calendarSection=lead?'<article class="card section"><div class="section-head"><div><h2>'+esc(t('Calendar follow-up'))+'</h2><p>'+esc(t("Keep this lead's next follow-up date on your calendar. Sync is idempotent."))+'</p></div></div>'+
+        '<div id="calendarLink">'+esc(t('Loading…'))+'</div></article>':'';
       document.getElementById('editorContent').innerHTML=hero+
         '<article class="card section"><div class="section-head"><div><h2>'+esc(t(lead?'Edit lead':'Create lead'))+'</h2><p>'+esc(t('Customer, trip and commercial details.'))+'</p></div></div>'+
         '<form id="leadForm"><div class="form-grid">'+
@@ -533,7 +535,7 @@
         field('Next follow-up',dateInput('nextFollowUp',lead&&lead.nextFollowUp))+
         field('Next action',input('nextAction',lead&&lead.nextAction,'E.g. Send quote'))+
         field('Notes','<textarea id="notes" class="textarea">'+esc(lead&&lead.notes||'')+'</textarea>','full')+
-        '</div><div class="toolbar" style="margin-top:18px"><button class="btn btn-primary" type="submit">'+esc(t('Save lead'))+'</button><button class="btn btn-secondary" type="button" data-view="leads">'+esc(t('Back'))+'</button></div></form></article>'+payments+templatesSection+documentsSection;
+        '</div><div class="toolbar" style="margin-top:18px"><button class="btn btn-primary" type="submit">'+esc(t('Save lead'))+'</button><button class="btn btn-secondary" type="button" data-view="leads">'+esc(t('Back'))+'</button></div></form></article>'+payments+templatesSection+documentsSection+calendarSection;
       document.getElementById('leadForm').addEventListener('submit',saveLeadUi);
       document.getElementById('leadForm').addEventListener('input',function(){state.dirty=true;});
       var templatePreviewButton=document.getElementById('templatePreviewButton');
@@ -542,6 +544,7 @@
         templatePreviewButton.addEventListener('click',function(){previewTemplateUi(lead.id);});
       }
       if(lead)loadDriveLink(lead.id).catch(function(error){showMessage(errorText(error),true);});
+      if(lead)loadCalendarLink(lead).catch(function(error){showMessage(errorText(error),true);});
       var paymentForm=document.getElementById('paymentForm');
       if(paymentForm)paymentForm.addEventListener('submit',savePaymentUi);
       var paymentReset=document.getElementById('paymentReset');
@@ -647,6 +650,37 @@
         resetUserForm();await loadUsers();showMessage(t('User access saved.'),false);
       }catch(error){showMessage(errorText(error),true);}
       finally{setFormBusy(event.currentTarget,false);}
+    }
+
+    async function loadCalendarLink(lead){
+      var container=document.getElementById('calendarLink');
+      if(!container)return;
+      var link=await api('getFollowUpEvent',lead.id);
+      renderCalendarLink(container,link,lead);
+    }
+
+    function renderCalendarLink(container,link,lead){
+      var hasEvent=!!link.eventId;
+      var followUp=lead.nextFollowUp||'';
+      var open=hasEvent?'<a class="btn btn-secondary" href="'+esc(link.eventUrl)+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">'+esc(t('Open in calendar'))+'</a>':'';
+      var syncedLine=hasEvent?'<small style="display:block;margin-bottom:10px;color:var(--muted)">'+esc(t('Currently synced to')+': ')+esc(link.followUpDate||'—')+'</small>':'';
+      var missingLine=!followUp?'<small style="display:block;margin-bottom:10px;color:var(--muted)">'+esc(t('Set a follow-up date on the lead first.'))+'</small>':'';
+      var syncButton='<button class="btn btn-secondary" type="button" id="syncCalendarButton"'+(!followUp&&!hasEvent?' disabled':'')+'>'+esc(t(hasEvent?'Resync':'Add to calendar'))+'</button>';
+      container.innerHTML=syncedLine+missingLine+'<div class="toolbar">'+syncButton+open+'</div>';
+      var button=document.getElementById('syncCalendarButton');
+      if(button)button.addEventListener('click',function(){syncCalendarUi(lead);});
+    }
+
+    async function syncCalendarUi(lead){
+      var button=document.getElementById('syncCalendarButton');
+      if(button)button.disabled=true;
+      try{
+        var result=await api('syncFollowUpEvent',lead.id);
+        var container=document.getElementById('calendarLink');
+        renderCalendarLink(container,result,lead);
+        var messages={created:t('Calendar event created.'),moved:t('Calendar event updated.'),unchanged:t('Calendar event is already up to date.'),none:t('Calendar event removed.')};
+        showMessage(messages[result.action]||t('Calendar event is already up to date.'),false);
+      }catch(error){showMessage(errorText(error),true);if(button)button.disabled=false;}
     }
 
     async function loadDriveLink(leadId){

@@ -250,6 +250,22 @@ const OTC_MESSAGES = Object.freeze({
     'Placeholders: {{name}}, {{phone}}, {{destination}}, {{service}}, {{travelStart}}, {{travelEnd}}, {{passengers}}, {{nextAction}}, {{budget}}, {{saleAmount}}, {{total}}, {{paid}}, {{balance}}, {{agentName}}, {{agentEmail}}, {{appName}}, {{today}}.':
       'Marcadores: {{name}}, {{phone}}, {{destination}}, {{service}}, {{travelStart}}, {{travelEnd}}, {{passengers}}, {{nextAction}}, {{budget}}, {{saleAmount}}, {{total}}, {{paid}}, {{balance}}, {{agentName}}, {{agentEmail}}, {{appName}}, {{today}}.',
 
+    // Calendar follow-ups.
+    'Calendar follow-up': 'Seguimiento en calendario',
+    "Keep this lead's next follow-up date on your calendar. Sync is idempotent.":
+      'Mantén la próxima fecha de seguimiento de este lead en tu calendario. La sincronización es idempotente.',
+    'Set a follow-up date on the lead first.':
+      'Primero define una fecha de seguimiento en el lead.',
+    'Add to calendar': 'Añadir al calendario',
+    'Resync': 'Volver a sincronizar',
+    'Open in calendar': 'Abrir en el calendario',
+    'Currently synced to': 'Sincronizado actualmente con',
+    'Calendar event created.': 'Evento de calendario creado.',
+    'Calendar event updated.': 'Evento de calendario actualizado.',
+    'Calendar event is already up to date.':
+      'El evento de calendario ya está actualizado.',
+    'Calendar event removed.': 'Evento de calendario eliminado.',
+
     // Drive documents.
     'Documents': 'Documentos',
     'A private Drive folder to store quotes, tickets and scanned documents for this lead.':

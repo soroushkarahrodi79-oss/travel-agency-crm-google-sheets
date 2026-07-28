@@ -8,6 +8,12 @@ versioning.
 
 ### Added
 
+- Calendar follow-up events synced from each lead's Next follow-up date, one
+  event per lead and idempotent: running sync twice never duplicates, changing
+  the date moves the event and closing or losing the lead deletes it. Adds a
+  `CALENDAR_EVENTS` sheet (schema version 4) and the narrow
+  `calendar.events.owned` OAuth scope, which only grants access to events the
+  CRM itself creates.
 - A private Google Drive folder per lead for quotes, tickets and scanned
   documents, created on request and linked from the lead editor. Adds a
   `DRIVE_LINKS` sheet (schema version 3) and the narrow `drive.file` OAuth

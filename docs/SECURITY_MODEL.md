@@ -43,6 +43,7 @@ compliance certification or substitute for an organization-specific review.
 | Remote health endpoint probes production | Owner-only API, environment gate and installation-specific staging token |
 | Demo records enter a live installation | Demo seeding fails closed in `production` |
 | Drive access exceeds document storage | Narrow `drive.file` scope; the CRM only creates and links folders, never lists or reads arbitrary Drive content |
+| Calendar access exceeds follow-up reminders | Narrow `calendar.events.owned` scope; the CRM only creates, moves and deletes events it itself created, and never reads other events |
 
 ## Authentication storage
 

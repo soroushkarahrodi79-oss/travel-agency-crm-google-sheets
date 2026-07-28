@@ -8,7 +8,7 @@ import {fileURLToPath} from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const properties = {
   TRAVEL_CRM_SPREADSHEET_ID: 'TEST_SPREADSHEET_ID_1234567890',
-  TRAVEL_CRM_SCHEMA_VERSION: '3',
+  TRAVEL_CRM_SCHEMA_VERSION: '4',
   TRAVEL_CRM_AUTH_SECRET: 'integration-test-secret',
   TRAVEL_CRM_ENVIRONMENT: 'staging',
   TRAVEL_CRM_STAGING_TOKEN: 'integration-staging-token-1234567890'
@@ -42,6 +42,10 @@ const headers = {
   DRIVE_LINKS: [
     'Lead ID', 'Folder ID', 'Folder URL', 'Created at', 'Updated at',
     'Updated by'
+  ],
+  CALENDAR_EVENTS: [
+    'Lead ID', 'Event ID', 'Event URL', 'Follow-up date', 'Synced at',
+    'Synced by'
   ]
 };
 
@@ -254,7 +258,8 @@ const sheets = {
   ]]),
   AUDIT_LOG: new MockSheet('AUDIT_LOG', headers.AUDIT_LOG),
   TEMPLATES: new MockSheet('TEMPLATES', headers.TEMPLATES),
-  DRIVE_LINKS: new MockSheet('DRIVE_LINKS', headers.DRIVE_LINKS)
+  DRIVE_LINKS: new MockSheet('DRIVE_LINKS', headers.DRIVE_LINKS),
+  CALENDAR_EVENTS: new MockSheet('CALENDAR_EVENTS', headers.CALENDAR_EVENTS)
 };
 
 let spreadsheetTimeZone = 'Europe/Madrid';
@@ -363,9 +368,47 @@ const DriveApp = {
   }
 };
 
+let calendarEventSequence = 0;
+const calendarEventsById = {};
+
+class MockCalendarEvent {
+  constructor(id, title, date) {
+    this.id = id;
+    this.title = title;
+    this.date = date;
+    this.description = '';
+    this.deleted = false;
+    calendarEventsById[id] = this;
+  }
+
+  getId() { return this.id; }
+
+  setDescription(text) {
+    this.description = String(text || '');
+    return this;
+  }
+
+  deleteEvent() {
+    this.deleted = true;
+    delete calendarEventsById[this.id];
+  }
+}
+
+const defaultCalendar = {
+  createAllDayEvent: (title, date) =>
+    new MockCalendarEvent('EVENT_' + (++calendarEventSequence), title, date),
+  getEventById: (id) => calendarEventsById[id] || null
+};
+
+const CalendarApp = {
+  getDefaultCalendar: () => defaultCalendar,
+  getCalendarById: (id) => id === 'primary' ? defaultCalendar : null
+};
+
 const context = vm.createContext({
   console,
   Date,
+  CalendarApp,
   DriveApp,
   PropertiesService: {
     getScriptProperties: () => scriptProperties
@@ -436,6 +479,7 @@ for (const file of [
   'LeadsService.gs',
   'TemplatesService.gs',
   'DriveService.gs',
+  'CalendarService.gs',
   'AdminService.gs',
   'Setup.gs',
   'WebApp.gs'
@@ -951,6 +995,94 @@ const recoveredFolder = plain(call(
 ));
 assert.match(recoveredFolder.folderId, /^FOLDER_/);
 
+// Calendar follow-ups: idempotent sync per lead, ownership-scoped.
+const calendarLead = queueLead(
+  'Calendar Sync Target', isoShift(queueToday, 3), 'CONTACTED'
+);
+
+const initialCalendarSnapshot = plain(call(
+  'getFollowUpEvent', queueSession.token, calendarLead.id
+));
+assert.deepEqual(
+  initialCalendarSnapshot,
+  {eventId: '', eventUrl: '', followUpDate: ''}
+);
+
+const created = plain(call('syncFollowUpEvent', queueSession.token, calendarLead.id));
+assert.equal(created.action, 'created');
+assert.match(created.eventId, /^EVENT_/);
+assert.equal(created.followUpDate, isoShift(queueToday, 3));
+
+// Idempotent: syncing again with no data changes is a no-op and returns the
+// same event ID rather than creating a duplicate.
+const unchanged = plain(call('syncFollowUpEvent', queueSession.token, calendarLead.id));
+assert.equal(unchanged.action, 'unchanged');
+assert.equal(unchanged.eventId, created.eventId);
+assert.equal(
+  Object.keys(calendarEventsById).filter((id) => !calendarEventsById[id].deleted).length,
+  1,
+  'Idempotent sync must not duplicate the calendar event.'
+);
+
+// A follow-up date change moves the event rather than leaving both around.
+plain(call('saveLead', adminSession.token, {
+  id: calendarLead.id,
+  name: calendarLead.name,
+  phone: calendarLead.phone,
+  agentEmail: 'queue@example.com',
+  source: 'WEB',
+  status: 'CONTACTED',
+  service: 'FLIGHT',
+  destination: calendarLead.destination,
+  budget: '900',
+  nextFollowUp: isoShift(queueToday, 6),
+  nextAction: 'Rescheduled'
+}));
+const moved = plain(call('syncFollowUpEvent', queueSession.token, calendarLead.id));
+assert.equal(moved.action, 'moved');
+assert.notEqual(moved.eventId, created.eventId);
+assert.equal(moved.followUpDate, isoShift(queueToday, 6));
+assert.equal(calendarEventsById[created.eventId], undefined,
+  'The old event must be gone after a move; only the new one may remain.');
+
+// Closing the lead removes the event.
+plain(call('saveLead', adminSession.token, {
+  id: calendarLead.id,
+  name: calendarLead.name,
+  phone: calendarLead.phone,
+  agentEmail: 'queue@example.com',
+  source: 'WEB',
+  status: 'LOST',
+  service: 'FLIGHT',
+  destination: calendarLead.destination,
+  budget: '900',
+  nextFollowUp: isoShift(queueToday, 6),
+  nextAction: 'Lost'
+}));
+const removed = plain(call('syncFollowUpEvent', queueSession.token, calendarLead.id));
+assert.equal(removed.action, 'none');
+assert.equal(removed.eventId, '');
+assert.equal(
+  Object.keys(calendarEventsById).filter((id) => !calendarEventsById[id].deleted).length,
+  0,
+  'A lost lead must leave no active calendar event.'
+);
+
+// A second sync in the "no event needed" state is still a safe no-op.
+const stillGone = plain(call('syncFollowUpEvent', queueSession.token, calendarLead.id));
+assert.equal(stillGone.action, 'none');
+
+// Ownership is inherited from opening the lead itself.
+assert.throws(
+  () => call('syncFollowUpEvent', reportSession.token, calendarLead.id),
+  /belongs to another agent/,
+  'Syncing a follow-up event must respect the same ownership as opening the lead.'
+);
+assert.throws(
+  () => call('syncFollowUpEvent', 'too-short'),
+  /session/
+);
+
 const health = plain(call('runHealthCheck_'));
 assert.equal(health.ok, true);
 const remoteAcceptance = plain(call(
@@ -994,6 +1126,7 @@ console.log('✓ Follow-up queue scopes, ordering and ownership are correct.');
 console.log('✓ Outstanding balances are aged, ranked, scoped and exclude settled leads.');
 console.log('✓ Templates are administrator-managed, ownership-scoped and render unknown tokens visibly.');
 console.log('✓ Drive folders are created once per lead, shared under one root folder, and ownership-scoped.');
+console.log('✓ Calendar follow-ups sync idempotently: create, no-op, move, delete on close, ownership-scoped.');
 console.log('✓ Locale switching translates agent errors and spares operator diagnostics.');
 console.log('✓ Operational health checks pass on a consistent installation.');
 console.log('✓ One-step setup can create and return a native spreadsheet.');
