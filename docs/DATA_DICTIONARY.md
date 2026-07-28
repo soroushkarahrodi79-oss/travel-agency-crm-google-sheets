@@ -129,6 +129,25 @@ enumerate or read the folder's contents. See
 [the security model](SECURITY_MODEL.md) for why the OAuth scope is
 deliberately narrow.
 
+## CALENDAR_EVENTS
+
+At most one CRM-owned calendar event per lead.
+
+| Column | Type | Meaning |
+| --- | --- | --- |
+| Lead ID | Text, foreign key | Related `LEADS` record |
+| Event ID | Text | Google Calendar event identifier |
+| Event URL | Text | Direct link to the event in Calendar |
+| Follow-up date | Date | The date the event is currently synced to |
+| Synced at | Date-time | When the CRM last created or moved the event |
+| Synced by | Email | Agent or administrator who triggered the sync |
+
+`syncFollowUpEvent(leadId)` is idempotent: with no relevant changes it is a
+no-op; when the follow-up date changes it moves the event; when the lead is
+closed, lost or has no follow-up date it deletes the event and clears the row.
+The narrow `calendar.events.owned` OAuth scope means the CRM never reads or
+lists events it did not create.
+
 ## AUDIT_LOG
 
 Append-oriented record of security and domain mutations.

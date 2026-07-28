@@ -36,6 +36,15 @@ reorder or replace unexpected headers.
 
 ## Release-specific migration notes
 
+### Schema 4 (Calendar follow-up events)
+
+Adds a `CALENDAR_EVENTS` sheet and a new
+`https://www.googleapis.com/auth/calendar.events.owned` OAuth scope.
+Re-authorize the project when prompted; this scope only grants access to
+events the CRM itself creates, never other calendar contents.
+`setupTravelCrm_()` creates the sheet automatically; no manual migration is
+required.
+
 ### Schema 3 (Drive folders per lead)
 
 Adds a `DRIVE_LINKS` sheet and a new `https://www.googleapis.com/auth/drive.file`

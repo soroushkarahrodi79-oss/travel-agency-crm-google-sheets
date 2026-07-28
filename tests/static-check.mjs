@@ -66,7 +66,8 @@ for (const name of [
   'getDashboard', 'searchLeads', 'getFollowUpQueue', 'getOutstandingReport',
   'getLead', 'saveLead', 'savePayment', 'cancelPayment', 'listUsers', 'saveUser',
   'listTemplates', 'saveTemplate', 'renderLeadTemplate',
-  'getLeadDriveFolder', 'createLeadDriveFolder'
+  'getLeadDriveFolder', 'createLeadDriveFolder',
+  'getFollowUpEvent', 'syncFollowUpEvent'
 ]) {
   check(
     new RegExp(`function\\s+${name}\\s*\\(`).test(allSource),
@@ -152,6 +153,15 @@ check(
   'templates are administrator-managed and rendered through lead ownership'
 );
 check(
+  allSource.includes('function syncFollowUpEvent(token, leadId)') &&
+    allSource.includes('function leadFollowUpIsSchedulable_(') &&
+    allSource.includes('function ensureCrmCalendar_(') &&
+    allSource.includes("action: 'unchanged'") &&
+    !allSource.includes('.getEvents(') &&
+    !allSource.includes('.getAllCalendars('),
+  'Calendar sync is idempotent and never reads events the CRM did not create'
+);
+check(
   allSource.includes('function createLeadDriveFolder(token, leadId)') &&
     allSource.includes('getLeadForUser_(user, leadId)') &&
     allSource.includes('function ensureDriveRootFolder_(') &&
@@ -232,11 +242,12 @@ check(
 );
 assert.equal(manifest.runtimeVersion, 'V8');
 check(
-  manifest.oauthScopes.length === 3 &&
+  manifest.oauthScopes.length === 4 &&
     manifest.oauthScopes.includes('https://www.googleapis.com/auth/spreadsheets') &&
     manifest.oauthScopes.includes('https://www.googleapis.com/auth/script.send_mail') &&
-    manifest.oauthScopes.includes('https://www.googleapis.com/auth/drive.file'),
-  'manifest is limited to Sheets, email-sending and the narrow per-file Drive scope'
+    manifest.oauthScopes.includes('https://www.googleapis.com/auth/drive.file') &&
+    manifest.oauthScopes.includes('https://www.googleapis.com/auth/calendar.events.owned'),
+  'manifest is limited to Sheets, email-sending, the narrow per-file Drive scope and calendar events the app itself owns'
 );
 check(
   manifest.webapp.executeAs === 'USER_DEPLOYING',

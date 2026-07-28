@@ -21,7 +21,7 @@ isolation, recovery and low operating complexity take priority.
 - [x] Follow-up queue with today/overdue views
 - [x] Exportable outstanding-balance and payment-aging report
 - [x] Reusable quote and customer-email templates
-- [ ] Calendar follow-up events with idempotent sync
+- [x] Calendar follow-up events with idempotent sync
 - [x] Drive folders and document links per lead
 - [x] Full UI localization, starting with Spanish and English
 

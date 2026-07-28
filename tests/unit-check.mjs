@@ -33,6 +33,7 @@ for (const file of [
   'PaymentsService.gs',
   'TemplatesService.gs',
   'DriveService.gs',
+  'CalendarService.gs',
   'AdminService.gs',
   'Setup.gs'
 ]) {
@@ -99,6 +100,30 @@ assert.equal(run('agingBucket_(31)'), 'SCHEDULED');
 assert.equal(
   run("driveFolderName_({id: 'TRV-2026-0001', name: 'Amelia Rivera'})"),
   'TRV-2026-0001 - Amelia Rivera'
+);
+
+// Follow-up events are only scheduled when there is something to follow up on
+// AND the lead is still open — closed and lost leads must not linger on the
+// calendar.
+assert.equal(
+  run("leadFollowUpIsSchedulable_({nextFollowUp: '2026-08-01', status: 'NEW'})"),
+  true
+);
+assert.equal(
+  run("leadFollowUpIsSchedulable_({nextFollowUp: '', status: 'NEW'})"),
+  false
+);
+assert.equal(
+  run("leadFollowUpIsSchedulable_({nextFollowUp: '2026-08-01', status: 'CLOSED_WON'})"),
+  false
+);
+assert.equal(
+  run("leadFollowUpIsSchedulable_({nextFollowUp: '2026-08-01', status: 'LOST'})"),
+  false
+);
+assert.equal(
+  run("calendarEventDescription_({id: 'TRV-1', destination: '', nextAction: 'Call', agentEmail: ''})"),
+  'Lead: TRV-1\nNext action: Call'
 );
 assert.equal(
   run("driveFolderName_({id: 'TRV-2026-0002', name: ''}).trim()"),
