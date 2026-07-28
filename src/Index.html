@@ -509,6 +509,8 @@
       var templatesSection=lead?'<article class="card section"><div class="section-head"><div><h2>'+esc(t('Quote and email templates'))+'</h2><p>'+esc(t("Render reusable text with this lead's current data."))+'</p></div></div>'+
         '<div class="toolbar"><select id="templatePicker" class="select" style="max-width:320px"></select><button id="templatePreviewButton" class="btn btn-secondary" type="button">'+esc(t('Preview'))+'</button></div>'+
         '<div id="templatePreview" style="margin-top:14px"></div></article>':'';
+      var documentsSection=lead?'<article class="card section"><div class="section-head"><div><h2>'+esc(t('Documents'))+'</h2><p>'+esc(t('A private Drive folder to store quotes, tickets and scanned documents for this lead.'))+'</p></div></div>'+
+        '<div id="documentsLink">'+esc(t('Loading…'))+'</div></article>':'';
       document.getElementById('editorContent').innerHTML=hero+
         '<article class="card section"><div class="section-head"><div><h2>'+esc(t(lead?'Edit lead':'Create lead'))+'</h2><p>'+esc(t('Customer, trip and commercial details.'))+'</p></div></div>'+
         '<form id="leadForm"><div class="form-grid">'+
@@ -531,7 +533,7 @@
         field('Next follow-up',dateInput('nextFollowUp',lead&&lead.nextFollowUp))+
         field('Next action',input('nextAction',lead&&lead.nextAction,'E.g. Send quote'))+
         field('Notes','<textarea id="notes" class="textarea">'+esc(lead&&lead.notes||'')+'</textarea>','full')+
-        '</div><div class="toolbar" style="margin-top:18px"><button class="btn btn-primary" type="submit">'+esc(t('Save lead'))+'</button><button class="btn btn-secondary" type="button" data-view="leads">'+esc(t('Back'))+'</button></div></form></article>'+payments+templatesSection;
+        '</div><div class="toolbar" style="margin-top:18px"><button class="btn btn-primary" type="submit">'+esc(t('Save lead'))+'</button><button class="btn btn-secondary" type="button" data-view="leads">'+esc(t('Back'))+'</button></div></form></article>'+payments+templatesSection+documentsSection;
       document.getElementById('leadForm').addEventListener('submit',saveLeadUi);
       document.getElementById('leadForm').addEventListener('input',function(){state.dirty=true;});
       var templatePreviewButton=document.getElementById('templatePreviewButton');
@@ -539,6 +541,7 @@
         populateTemplatePicker();
         templatePreviewButton.addEventListener('click',function(){previewTemplateUi(lead.id);});
       }
+      if(lead)loadDriveLink(lead.id).catch(function(error){showMessage(errorText(error),true);});
       var paymentForm=document.getElementById('paymentForm');
       if(paymentForm)paymentForm.addEventListener('submit',savePaymentUi);
       var paymentReset=document.getElementById('paymentReset');
@@ -644,6 +647,32 @@
         resetUserForm();await loadUsers();showMessage(t('User access saved.'),false);
       }catch(error){showMessage(errorText(error),true);}
       finally{setFormBusy(event.currentTarget,false);}
+    }
+
+    async function loadDriveLink(leadId){
+      var container=document.getElementById('documentsLink');
+      if(!container)return;
+      var link=await api('getLeadDriveFolder',leadId);
+      renderDriveLink(container,link,leadId);
+    }
+
+    function renderDriveLink(container,link,leadId){
+      if(link.folderUrl){
+        container.innerHTML='<a class="btn btn-secondary" href="'+esc(link.folderUrl)+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">'+esc(t('Open Drive folder'))+'</a>';
+        return;
+      }
+      container.innerHTML='<button class="btn btn-secondary" type="button" id="createDriveFolderButton">'+esc(t('Create Drive folder'))+'</button>';
+      document.getElementById('createDriveFolderButton').addEventListener('click',function(){createDriveFolderUi(leadId,container);});
+    }
+
+    async function createDriveFolderUi(leadId,container){
+      var button=document.getElementById('createDriveFolderButton');
+      if(button)button.disabled=true;
+      try{
+        var link=await api('createLeadDriveFolder',leadId);
+        renderDriveLink(container,link,leadId);
+        showMessage(t('Drive folder created.'),false);
+      }catch(error){showMessage(errorText(error),true);if(button)button.disabled=false;}
     }
 
     async function populateTemplatePicker(){

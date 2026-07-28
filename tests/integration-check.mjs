@@ -8,7 +8,7 @@ import {fileURLToPath} from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const properties = {
   TRAVEL_CRM_SPREADSHEET_ID: 'TEST_SPREADSHEET_ID_1234567890',
-  TRAVEL_CRM_SCHEMA_VERSION: '2',
+  TRAVEL_CRM_SCHEMA_VERSION: '3',
   TRAVEL_CRM_AUTH_SECRET: 'integration-test-secret',
   TRAVEL_CRM_ENVIRONMENT: 'staging',
   TRAVEL_CRM_STAGING_TOKEN: 'integration-staging-token-1234567890'
@@ -38,6 +38,10 @@ const headers = {
   TEMPLATES: [
     'Template ID', 'Name', 'Type', 'Subject', 'Body', 'Active',
     'Updated at', 'Updated by'
+  ],
+  DRIVE_LINKS: [
+    'Lead ID', 'Folder ID', 'Folder URL', 'Created at', 'Updated at',
+    'Updated by'
   ]
 };
 
@@ -249,7 +253,8 @@ const sheets = {
     'admin@example.com', 'Admin User', 'ADMIN', true, new Date()
   ]]),
   AUDIT_LOG: new MockSheet('AUDIT_LOG', headers.AUDIT_LOG),
-  TEMPLATES: new MockSheet('TEMPLATES', headers.TEMPLATES)
+  TEMPLATES: new MockSheet('TEMPLATES', headers.TEMPLATES),
+  DRIVE_LINKS: new MockSheet('DRIVE_LINKS', headers.DRIVE_LINKS)
 };
 
 let spreadsheetTimeZone = 'Europe/Madrid';
@@ -317,9 +322,51 @@ const scriptProperties = {
   getProperties: () => ({...properties})
 };
 
+let driveFolderSequence = 0;
+const driveFoldersById = {};
+const driveFoldersByName = {};
+
+class MockFolder {
+  constructor(id, name) {
+    this.id = id;
+    this.name = name;
+    driveFoldersById[id] = this;
+  }
+
+  getId() { return this.id; }
+
+  getUrl() { return 'https://drive.google.com/drive/folders/' + this.id; }
+
+  createFolder(name) {
+    return new MockFolder('FOLDER_' + (++driveFolderSequence), name);
+  }
+}
+
+const DriveApp = {
+  getFolderById: (id) => {
+    const folder = driveFoldersById[id];
+    if (!folder) throw new Error('No item with the given ID could be found.');
+    return folder;
+  },
+  getFoldersByName: (name) => {
+    const matches = driveFoldersByName[name] || [];
+    let index = 0;
+    return {
+      hasNext: () => index < matches.length,
+      next: () => matches[index++]
+    };
+  },
+  createFolder: (name) => {
+    const folder = new MockFolder('FOLDER_' + (++driveFolderSequence), name);
+    driveFoldersByName[name] = (driveFoldersByName[name] || []).concat(folder);
+    return folder;
+  }
+};
+
 const context = vm.createContext({
   console,
   Date,
+  DriveApp,
   PropertiesService: {
     getScriptProperties: () => scriptProperties
   },
@@ -388,6 +435,7 @@ for (const file of [
   'PaymentsService.gs',
   'LeadsService.gs',
   'TemplatesService.gs',
+  'DriveService.gs',
   'AdminService.gs',
   'Setup.gs',
   'WebApp.gs'
@@ -853,6 +901,56 @@ const updatedTemplate = plain(call('saveTemplate', adminSession.token, {
 assert.equal(updatedTemplate.id, quoteTemplate.id);
 assert.equal(updatedTemplate.name, 'Standard quote (revised)');
 
+// Drive folders: created once per lead, idempotently, and ownership-scoped.
+const noFolderYet = plain(call('getLeadDriveFolder', reportSession.token, soonLead.id));
+assert.deepEqual(noFolderYet, {folderId: '', folderUrl: ''});
+
+const createdFolder = plain(call(
+  'createLeadDriveFolder', reportSession.token, soonLead.id
+));
+assert.match(createdFolder.folderId, /^FOLDER_/);
+assert.match(createdFolder.folderUrl, /^https:\/\/drive\.google\.com\/drive\/folders\//);
+
+// Creating it again must not mint a second folder.
+const secondAttempt = plain(call(
+  'createLeadDriveFolder', reportSession.token, soonLead.id
+));
+assert.deepEqual(secondAttempt, createdFolder);
+
+assert.deepEqual(
+  plain(call('getLeadDriveFolder', reportSession.token, soonLead.id)),
+  createdFolder
+);
+assert.throws(
+  () => call('createLeadDriveFolder', reportSession.token, adminLead.id),
+  /belongs to another agent/,
+  'Creating a Drive folder must respect the same ownership as opening the lead.'
+);
+assert.throws(
+  () => call('getLeadDriveFolder', 'too-short'),
+  /session/
+);
+
+// A second lead reuses the same root "<app name> Leads" folder rather than
+// creating a duplicate top-level folder.
+const otherFolder = plain(call(
+  'createLeadDriveFolder', reportSession.token, startedLead.id
+));
+assert.notEqual(otherFolder.folderId, createdFolder.folderId);
+assert.equal(
+  Object.keys(driveFoldersByName).filter((name) => name.endsWith(' Leads')).length,
+  1,
+  'Both lead folders must live under a single shared root folder.'
+);
+
+// If the cached root-folder id points at a folder that no longer exists,
+// the next creation recovers by finding or recreating it rather than failing.
+properties.TRAVEL_CRM_DRIVE_ROOT_FOLDER_ID = 'DELETED_FOLDER_ID';
+const recoveredFolder = plain(call(
+  'createLeadDriveFolder', adminSession.token, adminLead.id
+));
+assert.match(recoveredFolder.folderId, /^FOLDER_/);
+
 const health = plain(call('runHealthCheck_'));
 assert.equal(health.ok, true);
 const remoteAcceptance = plain(call(
@@ -895,6 +993,7 @@ console.log('✓ Access changes invalidate sessions and retain auditable history
 console.log('✓ Follow-up queue scopes, ordering and ownership are correct.');
 console.log('✓ Outstanding balances are aged, ranked, scoped and exclude settled leads.');
 console.log('✓ Templates are administrator-managed, ownership-scoped and render unknown tokens visibly.');
+console.log('✓ Drive folders are created once per lead, shared under one root folder, and ownership-scoped.');
 console.log('✓ Locale switching translates agent errors and spares operator diagnostics.');
 console.log('✓ Operational health checks pass on a consistent installation.');
 console.log('✓ One-step setup can create and return a native spreadsheet.');

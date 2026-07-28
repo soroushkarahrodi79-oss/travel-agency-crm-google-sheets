@@ -81,6 +81,7 @@ function setupTravelCrm_() {
   ensureSheet_(spreadsheet, OTC.SHEETS.USERS, OTC.HEADERS.USERS);
   ensureSheet_(spreadsheet, OTC.SHEETS.AUDIT, OTC.HEADERS.AUDIT);
   ensureSheet_(spreadsheet, OTC.SHEETS.TEMPLATES, OTC.HEADERS.TEMPLATES);
+  ensureSheet_(spreadsheet, OTC.SHEETS.DRIVE_LINKS, OTC.HEADERS.DRIVE_LINKS);
   applySheetFormats_(spreadsheet);
   spreadsheet.setSpreadsheetTimeZone(runtime.timeZone);
 
@@ -183,6 +184,7 @@ function applySheetFormats_(spreadsheet) {
   const payments = spreadsheet.getSheetByName(OTC.SHEETS.PAYMENTS);
   const users = spreadsheet.getSheetByName(OTC.SHEETS.USERS);
   const templates = spreadsheet.getSheetByName(OTC.SHEETS.TEMPLATES);
+  const driveLinks = spreadsheet.getSheetByName(OTC.SHEETS.DRIVE_LINKS);
 
   leads.getRange('J2:K').setNumberFormat('#,##0.00');
   leads.getRange('L2:M').setNumberFormat('dd/MM/yyyy');
@@ -192,6 +194,7 @@ function applySheetFormats_(spreadsheet) {
   payments.getRange('D2:D').setNumberFormat('#,##0.00');
   users.getRange('D2:D').insertCheckboxes();
   templates.getRange('F2:F').insertCheckboxes();
+  driveLinks.getRange('D2:E').setNumberFormat('dd/MM/yyyy HH:mm');
 
   applyListValidation_(leads.getRange('G2:G'), OTC.OPTIONS.STATUSES);
   applyListValidation_(leads.getRange('H2:H'), OTC.OPTIONS.SERVICES);
@@ -201,7 +204,7 @@ function applySheetFormats_(spreadsheet) {
   applyListValidation_(payments.getRange('H2:H'), ['ACTIVE', 'CANCELLED']);
   applyListValidation_(templates.getRange('C2:C'), OTC.OPTIONS.TEMPLATE_TYPES);
 
-  [leads, reservations, payments, users, templates].forEach(function(sheet) {
+  [leads, reservations, payments, users, templates, driveLinks].forEach(function(sheet) {
     sheet.autoResizeColumns(1, Math.min(sheet.getLastColumn(), 18));
     sheet.setColumnWidths(1, sheet.getLastColumn(), 145);
   });
@@ -337,7 +340,8 @@ function buildHealthReport_(spreadsheet) {
     OTC.SHEETS.RESERVATIONS,
     OTC.SHEETS.PAYMENTS,
     OTC.SHEETS.USERS,
-    OTC.SHEETS.TEMPLATES
+    OTC.SHEETS.TEMPLATES,
+    OTC.SHEETS.DRIVE_LINKS
   ].forEach(function(name) {
     const sheet = spreadsheet.getSheetByName(name);
     const duplicates = sheet ? countDuplicateKeys_(sheet, 1) : 0;
@@ -355,6 +359,7 @@ function buildHealthReport_(spreadsheet) {
     message:
       relationshipIssues.orphanReservations + ' orphan reservation(s); ' +
       relationshipIssues.orphanPayments + ' orphan payment(s); ' +
+      relationshipIssues.orphanDriveLinks + ' orphan Drive link(s); ' +
       relationshipIssues.unknownOwners + ' lead(s) with unknown owners.'
   });
 
@@ -414,6 +419,7 @@ function countRelationshipIssues_(spreadsheet) {
   const reservations = spreadsheet.getSheetByName(OTC.SHEETS.RESERVATIONS);
   const payments = spreadsheet.getSheetByName(OTC.SHEETS.PAYMENTS);
   const users = spreadsheet.getSheetByName(OTC.SHEETS.USERS);
+  const driveLinks = spreadsheet.getSheetByName(OTC.SHEETS.DRIVE_LINKS);
   const leadIds = {};
   const userEmails = {};
   let unknownOwners = 0;
@@ -449,10 +455,12 @@ function countRelationshipIssues_(spreadsheet) {
 
   const orphanReservations = countOrphans_(reservations, 1);
   const orphanPayments = countOrphans_(payments, 2);
+  const orphanDriveLinks = countOrphans_(driveLinks, 1);
   return {
     orphanReservations: orphanReservations,
     orphanPayments: orphanPayments,
+    orphanDriveLinks: orphanDriveLinks,
     unknownOwners: unknownOwners,
-    total: orphanReservations + orphanPayments + unknownOwners
+    total: orphanReservations + orphanPayments + orphanDriveLinks + unknownOwners
   };
 }

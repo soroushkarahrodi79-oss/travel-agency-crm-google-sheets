@@ -8,6 +8,11 @@ versioning.
 
 ### Added
 
+- A private Google Drive folder per lead for quotes, tickets and scanned
+  documents, created on request and linked from the lead editor. Adds a
+  `DRIVE_LINKS` sheet (schema version 3) and the narrow `drive.file` OAuth
+  scope, which only grants access to folders the CRM itself creates; the CRM
+  never lists or reads a lead folder's contents.
 - Reusable quote and customer-email templates with `{{placeholder}}`
   substitution against a lead's current data, administrator-managed and
   agent-rendered within their own leads. Adds a `TEMPLATES` sheet (schema

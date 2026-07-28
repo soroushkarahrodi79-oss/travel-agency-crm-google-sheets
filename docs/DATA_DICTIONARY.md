@@ -110,6 +110,25 @@ Placeholders are resolved server side against the rendering lead: `name`,
 `agentEmail`, `appName`, `today`. An unrecognised token is left in the
 rendered text unchanged, so a typo is visible rather than silently dropped.
 
+## DRIVE_LINKS
+
+At most one Drive folder link per lead.
+
+| Column | Type | Meaning |
+| --- | --- | --- |
+| Lead ID | Text, foreign key | Related `LEADS` record |
+| Folder ID | Text | Google Drive folder identifier |
+| Folder URL | Text | Direct link opened by the Web App |
+| Created at | Date-time | When the folder was created |
+| Updated at | Date-time | Reserved for future edits; currently equals `Created at` |
+| Updated by | Email | Agent or administrator who created the folder |
+
+Created on request, once per lead, under a single shared root folder named
+`"<app name> Leads"`. The CRM only stores the folder's link; it does not
+enumerate or read the folder's contents. See
+[the security model](SECURITY_MODEL.md) for why the OAuth scope is
+deliberately narrow.
+
 ## AUDIT_LOG
 
 Append-oriented record of security and domain mutations.

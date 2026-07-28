@@ -250,6 +250,15 @@ const OTC_MESSAGES = Object.freeze({
     'Placeholders: {{name}}, {{phone}}, {{destination}}, {{service}}, {{travelStart}}, {{travelEnd}}, {{passengers}}, {{nextAction}}, {{budget}}, {{saleAmount}}, {{total}}, {{paid}}, {{balance}}, {{agentName}}, {{agentEmail}}, {{appName}}, {{today}}.':
       'Marcadores: {{name}}, {{phone}}, {{destination}}, {{service}}, {{travelStart}}, {{travelEnd}}, {{passengers}}, {{nextAction}}, {{budget}}, {{saleAmount}}, {{total}}, {{paid}}, {{balance}}, {{agentName}}, {{agentEmail}}, {{appName}}, {{today}}.',
 
+    // Drive documents.
+    'Documents': 'Documentos',
+    'A private Drive folder to store quotes, tickets and scanned documents for this lead.':
+      'Una carpeta privada de Drive para guardar presupuestos, billetes y documentos escaneados de este lead.',
+    'Loading…': 'Cargando…',
+    'Create Drive folder': 'Crear carpeta de Drive',
+    'Open Drive folder': 'Abrir carpeta de Drive',
+    'Drive folder created.': 'Carpeta de Drive creada.',
+
     // User administration.
     'User access': 'Acceso de usuarios',
     'Invite, promote or disable CRM users without sharing the spreadsheet.':

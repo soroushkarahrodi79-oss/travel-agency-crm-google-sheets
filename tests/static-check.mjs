@@ -65,7 +65,8 @@ for (const name of [
   'requestAccessCode', 'verifyAccessCode', 'signOut', 'getBootstrap',
   'getDashboard', 'searchLeads', 'getFollowUpQueue', 'getOutstandingReport',
   'getLead', 'saveLead', 'savePayment', 'cancelPayment', 'listUsers', 'saveUser',
-  'listTemplates', 'saveTemplate', 'renderLeadTemplate'
+  'listTemplates', 'saveTemplate', 'renderLeadTemplate',
+  'getLeadDriveFolder', 'createLeadDriveFolder'
 ]) {
   check(
     new RegExp(`function\\s+${name}\\s*\\(`).test(allSource),
@@ -151,6 +152,15 @@ check(
   'templates are administrator-managed and rendered through lead ownership'
 );
 check(
+  allSource.includes('function createLeadDriveFolder(token, leadId)') &&
+    allSource.includes('getLeadForUser_(user, leadId)') &&
+    allSource.includes('function ensureDriveRootFolder_(') &&
+    allSource.includes('DRIVE_ROOT_FOLDER_ID') &&
+    !allSource.includes('getFiles()') &&
+    !allSource.includes('.getFolders()'),
+  'Drive folders are created once per lead through lead ownership, without enumerating folder contents'
+);
+check(
   allSource.includes("function cellText_(") &&
     allSource.includes("/^[=+\\-@]/"),
   'spreadsheet formula-injection guard is present'
@@ -222,10 +232,11 @@ check(
 );
 assert.equal(manifest.runtimeVersion, 'V8');
 check(
-  manifest.oauthScopes.length === 2 &&
+  manifest.oauthScopes.length === 3 &&
     manifest.oauthScopes.includes('https://www.googleapis.com/auth/spreadsheets') &&
-    manifest.oauthScopes.includes('https://www.googleapis.com/auth/script.send_mail'),
-  'manifest uses only Sheets and email-sending scopes'
+    manifest.oauthScopes.includes('https://www.googleapis.com/auth/script.send_mail') &&
+    manifest.oauthScopes.includes('https://www.googleapis.com/auth/drive.file'),
+  'manifest is limited to Sheets, email-sending and the narrow per-file Drive scope'
 );
 check(
   manifest.webapp.executeAs === 'USER_DEPLOYING',

@@ -4,7 +4,7 @@
  */
 const OTC = Object.freeze({
   VERSION: '1.2.0',
-  SCHEMA_VERSION: 2,
+  SCHEMA_VERSION: 3,
   PROPERTY_SPREADSHEET_ID: 'TRAVEL_CRM_SPREADSHEET_ID',
   PROPERTY_ADMIN_EMAIL: 'TRAVEL_CRM_ADMIN_EMAIL',
   PROPERTIES: Object.freeze({
@@ -15,7 +15,8 @@ const OTC = Object.freeze({
     ENVIRONMENT: 'TRAVEL_CRM_ENVIRONMENT',
     STAGING_TOKEN: 'TRAVEL_CRM_STAGING_TOKEN',
     SCHEMA_VERSION: 'TRAVEL_CRM_SCHEMA_VERSION',
-    INSTALL_ID: 'TRAVEL_CRM_INSTALL_ID'
+    INSTALL_ID: 'TRAVEL_CRM_INSTALL_ID',
+    DRIVE_ROOT_FOLDER_ID: 'TRAVEL_CRM_DRIVE_ROOT_FOLDER_ID'
   }),
   DEFAULTS: Object.freeze({
     APP_NAME: 'Open Travel CRM',
@@ -54,7 +55,8 @@ const OTC = Object.freeze({
     PAYMENTS: 'PAYMENTS',
     USERS: 'USERS',
     AUDIT: 'AUDIT_LOG',
-    TEMPLATES: 'TEMPLATES'
+    TEMPLATES: 'TEMPLATES',
+    DRIVE_LINKS: 'DRIVE_LINKS'
   }),
   HEADERS: Object.freeze({
     LEADS: [
@@ -77,6 +79,10 @@ const OTC = Object.freeze({
     TEMPLATES: [
       'Template ID', 'Name', 'Type', 'Subject', 'Body', 'Active',
       'Updated at', 'Updated by'
+    ],
+    DRIVE_LINKS: [
+      'Lead ID', 'Folder ID', 'Folder URL', 'Created at', 'Updated at',
+      'Updated by'
     ]
   }),
   OPTIONS: Object.freeze({
