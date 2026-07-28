@@ -36,6 +36,14 @@ reorder or replace unexpected headers.
 
 ## Release-specific migration notes
 
+### Schema 3 (Drive folders per lead)
+
+Adds a `DRIVE_LINKS` sheet and a new `https://www.googleapis.com/auth/drive.file`
+OAuth scope. Re-authorize the project when prompted; this scope only grants
+access to folders the CRM itself creates, never the account's wider Drive.
+`setupTravelCrm_()` creates the sheet automatically; no manual migration is
+required.
+
 ### Schema 2 (quote and email templates)
 
 Adds a `TEMPLATES` sheet. `setupTravelCrm_()` creates it automatically on the

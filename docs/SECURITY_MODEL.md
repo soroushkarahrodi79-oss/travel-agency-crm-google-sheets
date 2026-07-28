@@ -42,6 +42,7 @@ compliance certification or substitute for an organization-specific review.
 | Last administrator is removed | Administrator lifecycle invariant under lock |
 | Remote health endpoint probes production | Owner-only API, environment gate and installation-specific staging token |
 | Demo records enter a live installation | Demo seeding fails closed in `production` |
+| Drive access exceeds document storage | Narrow `drive.file` scope; the CRM only creates and links folders, never lists or reads arbitrary Drive content |
 
 ## Authentication storage
 

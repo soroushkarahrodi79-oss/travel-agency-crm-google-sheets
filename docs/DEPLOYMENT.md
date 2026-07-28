@@ -77,14 +77,17 @@ Optional brand and regional settings are documented in
 ## 5. Run the installer
 
 Select `setupTravelCrm_` in the Apps Script editor and click **Run**. Approve the
-requested Sheets and email-sending scopes.
+requested Sheets, email-sending and Drive scopes. The Drive scope is the narrow
+`drive.file` grant: it only covers folders the CRM itself creates (one per
+lead, for document storage), never the account's wider Drive contents.
 
 The installer:
 
 - creates a native Google Sheet when no spreadsheet is configured;
 - infers the executing account when no administrator email is configured;
 - validates the spreadsheet ID and administrator email;
-- creates `LEADS`, `RESERVATIONS`, `PAYMENTS`, `USERS` and `AUDIT_LOG`;
+- creates `LEADS`, `RESERVATIONS`, `PAYMENTS`, `USERS`, `AUDIT_LOG`,
+  `TEMPLATES` and `DRIVE_LINKS`;
 - writes and verifies the expected headers;
 - adds formatting, checkboxes and list validation;
 - creates the first active administrator;

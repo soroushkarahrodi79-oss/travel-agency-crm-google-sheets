@@ -32,6 +32,7 @@ for (const file of [
   'LeadsService.gs',
   'PaymentsService.gs',
   'TemplatesService.gs',
+  'DriveService.gs',
   'AdminService.gs',
   'Setup.gs'
 ]) {
@@ -94,6 +95,15 @@ assert.equal(run('agingBucket_(7)'), 'DUE_SOON');
 assert.equal(run('agingBucket_(8)'), 'DUE_LATER');
 assert.equal(run('agingBucket_(30)'), 'DUE_LATER');
 assert.equal(run('agingBucket_(31)'), 'SCHEDULED');
+
+assert.equal(
+  run("driveFolderName_({id: 'TRV-2026-0001', name: 'Amelia Rivera'})"),
+  'TRV-2026-0001 - Amelia Rivera'
+);
+assert.equal(
+  run("driveFolderName_({id: 'TRV-2026-0002', name: ''}).trim()"),
+  'TRV-2026-0002 -'
+);
 
 assert.equal(run('isoShift_("", 7)'), '');
 assert.equal(run('isoShift_("not-a-date", 7)'), '');
