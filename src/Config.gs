@@ -3,7 +3,7 @@
  * Deployment-specific values live in Apps Script Properties.
  */
 const OTC = Object.freeze({
-  VERSION: '1.2.0',
+  VERSION: '1.3.0',
   SCHEMA_VERSION: 4,
   PROPERTY_SPREADSHEET_ID: 'TRAVEL_CRM_SPREADSHEET_ID',
   PROPERTY_ADMIN_EMAIL: 'TRAVEL_CRM_ADMIN_EMAIL',
