@@ -20,7 +20,7 @@ Do not place secrets or customer data in a public issue.
 
 ### Weekly
 
-1. Run `runHealthCheck_()` from the Apps Script editor.
+1. Run `runHealthCheck()` from the Apps Script editor as the deployment owner.
 2. Review failed Apps Script executions and email-send errors.
 3. Review disabled or stale accounts in **Users**.
 4. Inspect unusual sign-ins, cancellations and role changes in `AUDIT_LOG`.
@@ -83,7 +83,7 @@ Recovery test:
 
 1. copy the backup to a restricted test location;
 2. point a non-production Apps Script project at the restored spreadsheet;
-3. run `setupTravelCrm_()` and `runHealthCheck_()`;
+3. run `setupTravelCrm()` and `runHealthCheck()`;
 4. verify users, lead ownership, reservations, active/cancelled payments and audit rows;
 5. remove test access and document the result.
 

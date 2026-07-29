@@ -48,7 +48,7 @@ npm run apps-script:doctor
 
 1. Crea un proyecto independiente de Google Apps Script.
 2. Ejecuta `npm run apps-script:push`.
-3. Ejecuta `setupTravelCrm_()` desde el editor.
+3. Ejecuta `setupTravelCrm()` desde el editor como propietario del despliegue.
 4. El instalador crea una hoja nativa y usa tu cuenta como administrador.
 5. Para conectar una hoja existente, configura opcionalmente:
 

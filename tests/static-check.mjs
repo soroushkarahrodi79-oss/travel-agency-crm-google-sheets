@@ -76,12 +76,16 @@ for (const name of [
 }
 
 check(
-  allSource.includes('function setupTravelCrm_(') &&
+  allSource.includes('function setupTravelCrm()') &&
+    allSource.includes('function setupTravelCrm_(') &&
     allSource.includes('function seedDemoData_(') &&
+    allSource.includes('function runHealthCheck()') &&
     allSource.includes('function runHealthCheck_(') &&
-    !allSource.includes('function setupTravelCrm(') &&
+    allSource.includes('function requireDeploymentOwner_(') &&
+    allSource.includes('Session.getActiveUser().getEmail()') &&
+    allSource.includes('activeEmail !== effectiveEmail') &&
     !allSource.includes('function seedDemoData('),
-  'installer and demo seed cannot be called from the browser'
+  'operator entry points require the deployment owner and demo seed stays private'
 );
 check(
   allSource.includes("SpreadsheetApp.create(runtime.appName + ' Data')") &&
@@ -242,12 +246,13 @@ check(
 );
 assert.equal(manifest.runtimeVersion, 'V8');
 check(
-  manifest.oauthScopes.length === 4 &&
+  manifest.oauthScopes.length === 5 &&
     manifest.oauthScopes.includes('https://www.googleapis.com/auth/spreadsheets') &&
     manifest.oauthScopes.includes('https://www.googleapis.com/auth/script.send_mail') &&
     manifest.oauthScopes.includes('https://www.googleapis.com/auth/drive.file') &&
-    manifest.oauthScopes.includes('https://www.googleapis.com/auth/calendar.events.owned'),
-  'manifest is limited to Sheets, email-sending, the narrow per-file Drive scope and calendar events the app itself owns'
+    manifest.oauthScopes.includes('https://www.googleapis.com/auth/calendar.events.owned') &&
+    manifest.oauthScopes.includes('https://www.googleapis.com/auth/userinfo.email'),
+  'manifest is limited to Sheets, email-sending, operator identity, the narrow per-file Drive scope and calendar events the app itself owns'
 );
 check(
   manifest.webapp.executeAs === 'USER_DEPLOYING',

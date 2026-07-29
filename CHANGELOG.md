@@ -4,6 +4,19 @@ All notable changes follow the principles of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and semantic
 versioning.
 
+## [Unreleased]
+
+### Fixed
+
+- Added the explicit `userinfo.email` OAuth scope required by
+  `Session.getActiveUser()` and `Session.getEffectiveUser()`, so first-time
+  setup and upgrades can identify the deployment owner.
+- Added deployment-owner-gated `setupTravelCrm()` and `runHealthCheck()`
+  operator entry points that appear in the Apps Script editor while failing
+  closed when called through the execute-as-owner Web App.
+- Corrected deployment and upgrade instructions that previously told operators
+  to select private underscore-suffixed functions that Apps Script hides.
+
 ## [1.3.0] - 2026-07-28
 
 Completes the roadmap's *Next: daily agency workflow* section. Every feature
@@ -39,13 +52,13 @@ ownership rules and ships behind the same static, unit and integration gates.
 ### Changed
 
 - Schema version bumped from **1** to **4** across four incremental steps
-  (`TEMPLATES`, `DRIVE_LINKS`, `CALENDAR_EVENTS`). `setupTravelCrm_()` creates
+  (`TEMPLATES`, `DRIVE_LINKS`, `CALENDAR_EVENTS`). `setupTravelCrm()` creates
   the new sheets automatically on the next run; see
   [`docs/UPGRADING.md`](docs/UPGRADING.md) for the per-schema notes.
 - OAuth scopes now include `drive.file` and `calendar.events.owned` — the
   narrowest grants available. Both only cover items the app itself creates;
   the deployer's wider Drive and Calendar contents stay invisible to the CRM.
-  Re-authorization is required on the next `setupTravelCrm_()` run.
+  Re-authorization is required on the next `setupTravelCrm()` run.
 - Reworked payment aggregation into a single
   `activePaymentAggregatesByLead_` pass shared between the dashboard and the
   balance report, replacing two near-identical scans.

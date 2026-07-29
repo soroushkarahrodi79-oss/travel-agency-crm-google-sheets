@@ -1,4 +1,36 @@
 /**
+ * Operator entry point shown in the Apps Script editor.
+ *
+ * The web app executes as the deployment owner, so effective-user identity
+ * alone cannot distinguish an editor run from an untrusted browser request.
+ * Requiring the active user to be present and equal to the effective user
+ * keeps this callable by the project owner in the editor while browser calls
+ * to an "execute as me" deployment fail closed.
+ */
+function setupTravelCrm() {
+  requireDeploymentOwner_();
+  return setupTravelCrm_();
+}
+
+function requireDeploymentOwner_() {
+  const activeEmail = cleanText_(
+    Session.getActiveUser().getEmail(),
+    200
+  ).toLowerCase();
+  const effectiveEmail = cleanText_(
+    Session.getEffectiveUser().getEmail(),
+    200
+  ).toLowerCase();
+  if (!activeEmail || !effectiveEmail || activeEmail !== effectiveEmail) {
+    throw new Error(
+      'This operator function must be run directly by the Apps Script ' +
+      'deployment owner.'
+    );
+  }
+  return effectiveEmail;
+}
+
+/**
  * Creates or connects the native Google Sheets data store, provisions the
  * schema and registers the first administrator.
  *
@@ -114,7 +146,7 @@ function setupTravelCrm_() {
     health: health,
     nextSteps: [
       'Open the spreadsheet and keep its sharing restricted.',
-      'Run runHealthCheck_() and require ok: true.',
+      'Run runHealthCheck() and require ok: true.',
       'Deploy the project as a Web App that executes as you.'
     ]
   };
@@ -258,7 +290,15 @@ function seedDemoData_() {
 }
 
 /**
- * Manual, read-only operational check. It is private to the Apps Script editor.
+ * Operator entry point shown in the Apps Script editor.
+ */
+function runHealthCheck() {
+  requireDeploymentOwner_();
+  return runHealthCheck_();
+}
+
+/**
+ * Private implementation for the owner-only health-check entrypoint.
  */
 function runHealthCheck_() {
   return buildHealthReport_(getCrmSpreadsheet_());
