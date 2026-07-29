@@ -24,14 +24,14 @@ clasp push
 
 In the Apps Script editor:
 
-1. run `setupTravelCrm_()`;
+1. run `setupTravelCrm()` as the deployment owner;
 2. confirm it completes without a schema mismatch;
-3. run `runHealthCheck_()` and require `ok: true`;
+3. run `runHealthCheck()` and require `ok: true`;
 4. create a new immutable Web App version;
 5. update the production deployment to that version;
 6. complete the deployment acceptance test.
 
-`setupTravelCrm_()` is idempotent for compatible schemas. It does not silently
+`setupTravelCrm()` is idempotent for compatible schemas. It does not silently
 reorder or replace unexpected headers.
 
 ## Release-specific migration notes
@@ -42,7 +42,7 @@ Adds a `CALENDAR_EVENTS` sheet and a new
 `https://www.googleapis.com/auth/calendar.events.owned` OAuth scope.
 Re-authorize the project when prompted; this scope only grants access to
 events the CRM itself creates, never other calendar contents.
-`setupTravelCrm_()` creates the sheet automatically; no manual migration is
+`setupTravelCrm()` creates the sheet automatically; no manual migration is
 required.
 
 ### Schema 3 (Drive folders per lead)
@@ -50,12 +50,12 @@ required.
 Adds a `DRIVE_LINKS` sheet and a new `https://www.googleapis.com/auth/drive.file`
 OAuth scope. Re-authorize the project when prompted; this scope only grants
 access to folders the CRM itself creates, never the account's wider Drive.
-`setupTravelCrm_()` creates the sheet automatically; no manual migration is
+`setupTravelCrm()` creates the sheet automatically; no manual migration is
 required.
 
 ### Schema 2 (quote and email templates)
 
-Adds a `TEMPLATES` sheet. `setupTravelCrm_()` creates it automatically on the
+Adds a `TEMPLATES` sheet. `setupTravelCrm()` creates it automatically on the
 next run; no manual column changes or data migration are required. Existing
 `LEADS`, `RESERVATIONS`, `PAYMENTS`, `USERS` and `AUDIT_LOG` headers are
 unchanged.

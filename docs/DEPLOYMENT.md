@@ -25,7 +25,7 @@ Do not continue with a failing check.
 
 ## 2. Choose the data-store path
 
-Recommended: let `setupTravelCrm_()` create a native Google Sheet in your
+Recommended: let `setupTravelCrm()` create a native Google Sheet in your
 account. Leave `TRAVEL_CRM_SPREADSHEET_ID` unset and continue to step 3.
 
 To connect an existing blank Sheet, copy its ID from:
@@ -76,10 +76,13 @@ Optional brand and regional settings are documented in
 
 ## 5. Run the installer
 
-Select `setupTravelCrm_` in the Apps Script editor and click **Run**. Approve the
-requested Sheets, email-sending, Drive and Calendar scopes. Both third-party
-scopes are the narrowest grants available: `drive.file` only covers folders the
-CRM itself creates (one per lead, for document storage), and
+Select `setupTravelCrm` in the Apps Script editor and click **Run** while signed
+in as the deployment owner. Approve the requested Sheets, email-sending,
+operator-email, Drive and Calendar scopes. The email scope identifies the
+executing owner so the installer can register the first administrator and
+reject browser-originated operator calls. Both third-party scopes are the
+narrowest grants available: `drive.file` only covers folders the CRM itself
+creates (one per lead, for document storage), and
 `calendar.events.owned` only covers events the CRM itself creates (one per
 lead, for follow-up reminders). Neither grants access to the account's wider
 Drive or Calendar contents.
@@ -98,7 +101,7 @@ The installer:
 - records the schema version;
 - deletes the temporary `TRAVEL_CRM_ADMIN_EMAIL` property.
 
-Copy the returned `spreadsheetUrl`. Run `runHealthCheck_()` from the editor. It
+Copy the returned `spreadsheetUrl`. Run `runHealthCheck()` from the editor. It
 verifies sheet headers, primary-key
 uniqueness, relationships, active administrators, schema version and time-zone
 alignment. Its returned object must have `ok: true`.
@@ -133,7 +136,7 @@ Use fictional data:
 10. Confirm the agent cannot read that lead.
 11. Disable the agent and confirm its existing session stops working.
 12. Inspect `AUDIT_LOG` for the corresponding actions.
-13. Run `runHealthCheck_()` again.
+13. Run `runHealthCheck()` again.
 
 ## 8. Production readiness
 

@@ -113,8 +113,9 @@ The project invokes a version-pinned `clasp` on demand; the generated
 
 ### 3. Configure and initialize
 
-Run `setupTravelCrm_()` from the Apps Script editor. By default it creates a
+Run `setupTravelCrm()` from the Apps Script editor. By default it creates a
 native Sheet in the executing account and uses that account as administrator.
+The operator entry point is restricted to a direct run by the deployment owner.
 
 To connect an existing Sheet, or when the executing email is unavailable, add:
 
@@ -123,7 +124,7 @@ To connect an existing Sheet, or when the executing email is unavailable, add:
 | `TRAVEL_CRM_SPREADSHEET_ID` | ID from the Google Sheet URL |
 | `TRAVEL_CRM_ADMIN_EMAIL` | Email of the first administrator |
 
-Run `setupTravelCrm_()` again. It returns the Sheet URL, creates the five tabs,
+Run `setupTravelCrm()` again. It returns the Sheet URL, creates the eight tabs,
 validates their headers, registers the administrator and records the schema.
 
 ### 4. Deploy

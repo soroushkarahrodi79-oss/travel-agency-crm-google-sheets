@@ -153,7 +153,7 @@ below its active collected payments.
 ## Schema lifecycle
 
 `TRAVEL_CRM_SCHEMA_VERSION` records the installed schema. Normal requests fail
-closed if code and schema versions differ. `setupTravelCrm_()` is idempotent for
+closed if code and schema versions differ. `setupTravelCrm()` is idempotent for
 a compatible installation and refuses to overwrite unexpected headers.
 
 Future schema changes must include an explicit migration path and update the

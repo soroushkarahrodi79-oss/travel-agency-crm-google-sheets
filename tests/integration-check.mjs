@@ -405,6 +405,8 @@ const CalendarApp = {
   getCalendarById: (id) => id === 'primary' ? defaultCalendar : null
 };
 
+let activeSessionEmail = 'admin@example.com';
+let effectiveSessionEmail = 'admin@example.com';
 const context = vm.createContext({
   console,
   Date,
@@ -414,8 +416,11 @@ const context = vm.createContext({
     getScriptProperties: () => scriptProperties
   },
   Session: {
+    getActiveUser: () => ({
+      getEmail: () => activeSessionEmail
+    }),
     getEffectiveUser: () => ({
-      getEmail: () => 'admin@example.com'
+      getEmail: () => effectiveSessionEmail
     })
   },
   SpreadsheetApp: {
@@ -1083,8 +1088,24 @@ assert.throws(
   /session/
 );
 
-const health = plain(call('runHealthCheck_'));
+const health = plain(call('runHealthCheck'));
 assert.equal(health.ok, true);
+  activeSessionEmail = '';
+  assert.throws(
+    () => call('runHealthCheck'),
+    /deployment owner/
+  );
+
+  activeSessionEmail = 'other@example.com';
+assert.throws(
+  () => call('runHealthCheck'),
+  /deployment owner/
+);
+assert.throws(
+  () => call('setupTravelCrm'),
+  /deployment owner/
+);
+activeSessionEmail = effectiveSessionEmail;
 const remoteAcceptance = plain(call(
   'runStagingAcceptance',
   properties.TRAVEL_CRM_STAGING_TOKEN
@@ -1096,7 +1117,7 @@ assert.throws(
   /Invalid staging acceptance token/
 );
 delete properties.TRAVEL_CRM_SPREADSHEET_ID;
-const oneStepSetup = plain(call('setupTravelCrm_'));
+const oneStepSetup = plain(call('setupTravelCrm'));
 assert.equal(oneStepSetup.createdSpreadsheet, true);
 assert.match(oneStepSetup.spreadsheetUrl, /CREATED_SPREADSHEET_ID/);
 assert.equal(

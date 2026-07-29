@@ -119,7 +119,7 @@ function getCrmSpreadsheet_() {
   const id = properties.getProperty(OTC.PROPERTY_SPREADSHEET_ID);
   if (!id) {
     throw new Error(
-      'CRM is not configured. Set Script Properties and run setupTravelCrm_().'
+      'CRM is not configured. Set Script Properties and run setupTravelCrm().'
     );
   }
   const schema = Number(
@@ -127,7 +127,7 @@ function getCrmSpreadsheet_() {
   );
   if (schema !== OTC.SCHEMA_VERSION) {
     throw new Error(
-      'CRM schema is not ready for this version. Run setupTravelCrm_() ' +
+      'CRM schema is not ready for this version. Run setupTravelCrm() ' +
       'from the Apps Script editor and review the upgrading guide.'
     );
   }

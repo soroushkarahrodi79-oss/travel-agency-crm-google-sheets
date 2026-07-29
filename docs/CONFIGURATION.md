@@ -48,7 +48,7 @@ translation, so the catalogue cannot silently fall behind the interface.
 Choose the production time zone before entering real records. After changing a
 setting, reload the Web App. A time-zone change on an existing installation can
 alter how historical dates are interpreted: back up the sheet, test against a
-copy, rerun `setupTravelCrm_()` and complete the acceptance test.
+copy, rerun `setupTravelCrm()` and complete the acceptance test.
 
 ## Managed internal properties
 

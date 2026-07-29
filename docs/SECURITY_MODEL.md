@@ -38,6 +38,7 @@ compliance certification or substitute for an organization-specific review.
 | Cancelled payment leaves a won lead inconsistent | Server recalculates and synchronizes lead status |
 | Text becomes a Sheets formula | Formula-leading text is escaped before write |
 | Upgrade overwrites unexpected columns | Version guard and exact header compatibility check |
+| Browser invokes setup or health operators | Active user must be present and equal the effective deployment owner |
 | Repository leaks deployment secrets | Script Properties, ignored private files and secret scan |
 | Last administrator is removed | Administrator lifecycle invariant under lock |
 | Remote health endpoint probes production | Owner-only API, environment gate and installation-specific staging token |
